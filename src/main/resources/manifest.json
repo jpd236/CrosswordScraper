@@ -1,0 +1,26 @@
+{
+  "manifest_version": 2,
+  "name": "Crossword Scraper",
+  "description": "Download .puz or .jpz files from crossword applets for offline solving.",
+  "version": "1.0.0",
+  "icons": {
+    "128": "128.png"
+  },
+  "browser_action": {
+    "default_icon": "48.png",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "activeTab",
+    "storage",
+    "webNavigation"
+  ],
+  "optional_permissions": [
+    "https://*.amuselabs.com/*",
+    "https://*.crosshare.org/*",
+    "https://*.universaluclick.com/*",
+    "https://*.wsj.com/*",
+    "https://*.bostonglobe.com/*",
+    "https://*.worldofcrosswords.com/*"
+  ]
+}

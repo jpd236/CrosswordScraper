@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+
+    <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css">
+
+    <title>Crossword Scraper</title>
+    <style type="text/css">
+      body {
+        width: 325px;
+      }
+
+    </style>
+    <script src="browser-polyfill.min.js"></script>
+</head>
+
+<body class="py-2">
+<div class="container-fluid">
+    <h2>Crossword Scraper</h2>
+    <hr/>
+    <div id="loading-container">
+        <div class="spinner-border align-middle" id="loading-spinner" role="status"></div>
+        <strong class="ml-1">Loading&hellip;</strong>
+    </div>
+    <div class="d-none" id="puzzle-container"></div>
+</div>
+<script src="jquery.slim.min.js"></script>
+<script src="js/bootstrap.bundle.min.js"></script>
+<script src="popup.js"></script>
+</body>
+</html>

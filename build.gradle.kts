@@ -3,14 +3,10 @@ plugins {
 }
 
 group = "com.jeffpdavidson"
-version = "1.0.0-SNAPSHOT"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
-    // TODO: Remove once kotwords is pushed to Maven Central
-    maven {
-        url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-    }
 }
 
 dependencies {
@@ -18,7 +14,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:1.4.2")
     implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.3")
 
-    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.0.0-SNAPSHOT")
+    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.0.0")
 
     runtimeOnly(npm("webextension-polyfill", "0.7.0"))
     runtimeOnly(npm("jquery", "3.5.1"))

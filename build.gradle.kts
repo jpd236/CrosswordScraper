@@ -77,7 +77,6 @@ tasks {
         register<Zip>("${env}Extension") {
             dependsOn(copyBundleFile, copyJsDeps, copyResources)
             from(extensionFolder)
-            into("build")
             archiveAppendix.set(env)
         }
     }

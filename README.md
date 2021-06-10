@@ -5,7 +5,7 @@ Browser extension which downloads crosswords from crossword applets for offline 
 
 ## Install
 - [Mozilla Firefox](https://addons.mozilla.org/en-US/firefox/addon/crossword-scraper/)
-- Google Chrome (coming soon)
+- [Google Chrome](https://chrome.google.com/webstore/detail/crossword-scraper/lmneijnoafbpnfdjabialjehgohpmcpo)
 
 ## Development
 Crossword Scraper is built on Kotlin/JS. To build and run the extension locally, run:

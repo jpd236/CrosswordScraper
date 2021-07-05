@@ -1,20 +1,21 @@
 plugins {
-    kotlin("js") version "1.4.32"
+    kotlin("js") version "1.5.20"
 }
 
 group = "com.jeffpdavidson"
-version = "1.0.1"
+version = "1.0.2-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    // TODO: Remove ahead of public release.
+    maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
 }
 
 dependencies {
-    implementation(kotlin("stdlib-js"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:1.4.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:1.5.0")
     implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.3")
 
-    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.0.0")
+    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.0.1-SNAPSHOT")
 
     runtimeOnly(npm("webextension-polyfill", "0.7.0"))
     runtimeOnly(npm("jquery", "3.5.1"))

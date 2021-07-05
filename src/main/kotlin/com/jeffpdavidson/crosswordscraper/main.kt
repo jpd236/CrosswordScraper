@@ -141,7 +141,7 @@ private fun HtmlBlockTag.renderScrapeSuccess(scrapedPuzzle: ScrapeResult.Success
         } else {
             fileTitleParts.joinToString("-") { part ->
                 part.split("\\s+".toRegex()).joinToString("") {
-                    it.replace("[^A-Za-z0-9]".toRegex(), "").capitalize()
+                    it.replace("[^A-Za-z0-9]".toRegex(), "").replaceFirstChar { ch -> ch.uppercase() }
                 }
             }
         }
@@ -154,7 +154,7 @@ private fun HtmlBlockTag.renderScrapeSuccess(scrapedPuzzle: ScrapeResult.Success
         a {
             attributes["download"] = "$filenameBase.${format.extension}"
             href = dataUrl
-            +format.extension.toUpperCase()
+            +format.extension.uppercase()
         }
     }
 }

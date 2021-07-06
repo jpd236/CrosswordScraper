@@ -16,23 +16,26 @@ import kotlinx.coroutines.launch
 import kotlinx.dom.addClass
 import kotlinx.dom.clear
 import kotlinx.dom.removeClass
+import kotlinx.html.ButtonType
 import kotlinx.html.HtmlBlockTag
 import kotlinx.html.a
 import kotlinx.html.classes
 import kotlinx.html.div
 import kotlinx.html.dom.append
+import kotlinx.html.id
+import kotlinx.html.js.button
 import kotlinx.html.js.li
 import kotlinx.html.js.onClickFunction
 import kotlinx.html.js.p
 import kotlinx.html.js.ul
+import kotlinx.html.tabIndex
 import org.khronos.webgl.Int8Array
+import org.w3c.dom.HTMLAnchorElement
 import org.w3c.dom.HTMLDivElement
+import org.w3c.dom.HTMLParagraphElement
 import org.w3c.dom.url.URL
 import org.w3c.files.Blob
 import org.w3c.files.FileReader
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
-import kotlin.coroutines.suspendCoroutine
 
 fun main() {
     document.onContentLoadedEventAsync {
@@ -92,13 +95,7 @@ private suspend fun launchCrosswordScraper() {
 }
 
 private sealed class ProcessedScrapeResult {
-    data class Success(
-        val source: String,
-        val crossword: Crossword,
-        /** Map from FileFormat to a data URL containing the crossword data in that format. */
-        val output: Map<FileFormat, String>
-    ) : ProcessedScrapeResult()
-
+    data class Success(val source: String, val crossword: Crossword) : ProcessedScrapeResult()
     data class NeedPermissions(val source: String, val permissions: List<String>) : ProcessedScrapeResult()
     data class Error(val source: String) : ProcessedScrapeResult()
 }
@@ -108,7 +105,6 @@ private suspend fun scrapePuzzles(): Set<ProcessedScrapeResult> {
     val frames = Scraping.getAllFrames()
     val puzzles = mutableSetOf<ProcessedScrapeResult>()
     val processedCrosswords = mutableListOf<Crossword>()
-    // TODO: Investigate whether parallelizing scrapes improves performance on pages with many puzzles.
     frames.forEach { frame ->
         val isTopLevel = frame.parentFrameId == -1
         SOURCES.forEach { source ->
@@ -121,7 +117,7 @@ private suspend fun scrapePuzzles(): Set<ProcessedScrapeResult> {
                                 try {
                                     val crossword = crosswordable.asCrossword()
                                     if (!isDuplicate(processedCrosswords, crossword)) {
-                                        puzzles.add(createOutputFiles(source.sourceName, crossword))
+                                        puzzles.add(ProcessedScrapeResult.Success(source.sourceName, crossword))
                                         processedCrosswords.add(crossword)
                                     }
                                 } catch (t: Throwable) {
@@ -176,14 +172,28 @@ private fun HtmlBlockTag.renderScrapeSuccess(scrapedPuzzle: ProcessedScrapeResul
         }
 
     // Render each download link labeled by the extension, separated by "|".
-    scrapedPuzzle.output.entries.forEachIndexed { i, (format, dataUrl) ->
+    FileFormat.values().forEachIndexed { i, fileFormat ->
         if (i > 0) {
             +" | "
         }
         a {
-            attributes["download"] = "$filenameBase.${format.extension}"
-            href = dataUrl
-            +format.extension.uppercase()
+            href = "#"
+            onClickFunction = {
+                GlobalScope.launch {
+                    try {
+                        startDownload(
+                            "$filenameBase.${fileFormat.extension}",
+                            fileFormat.toBinary(scrapedPuzzle.crossword)
+                        )
+                    } catch (t: Throwable) {
+                        console.info("Error converting to ${fileFormat.name}:", t.stackTraceToString())
+                        showErrorModal(
+                            "Error converting to ${fileFormat.extension.uppercase()}. Please try another format."
+                        )
+                    }
+                }
+            }
+            +fileFormat.extension.uppercase()
         }
     }
 }
@@ -214,46 +224,50 @@ private fun HtmlBlockTag.renderPermissionPrompt(
     }
 }
 
-/**
- * Attempt to create all supported output files for the given [Crossword].
- *
- * @return [ProcessedScrapeResult.Success] containing all output files that were successfully created. Returns
- *   [ProcessedScrapeResult.Error] if the given [Crossword] fails to convert to all supported formats.
- */
-private suspend fun createOutputFiles(source: String, crossword: Crossword): ProcessedScrapeResult {
-    // TODO: Investigate whether parallelizing conversions improves performance.
-    val output = FileFormat.values().mapNotNull { fileFormat ->
-        try {
-            fileFormat to createDataUrl(fileFormat.toBinary(crossword))
-        } catch (t: Throwable) {
-            console.info("Error converting to ${fileFormat.name}:", t.stackTraceToString())
-            null
+/** Show an error modal (dialog) with the given message. */
+private fun showErrorModal(message: String) {
+    val errorDialog = document.getElementById("error-dialog")
+    if (errorDialog == null) {
+        document.getElementById("root")!!.append {
+            div("modal") {
+                id = "error-dialog"
+                tabIndex = "-1"
+                div("modal-dialog modal-sm") {
+                    div("modal-content") {
+                        div("modal-body") {
+                            p {
+                                id = "error-message"
+                                +message
+                            }
+                        }
+                        div("modal-footer") {
+                            button(type = ButtonType.button, classes = "btn btn-secondary") {
+                                attributes["data-dismiss"] = "modal"
+                                +"Close"
+                            }
+                        }
+                    }
+                }
+            }
         }
-    }.toMap()
-
-    if (output.isEmpty()) {
-        console.error("Could not convert to any supported format")
-        return ProcessedScrapeResult.Error(source)
+    } else {
+        val errorMessageElement = document.getElementById("error-message") as HTMLParagraphElement
+        errorMessageElement.innerText = message
     }
-
-    return ProcessedScrapeResult.Success(source, crossword, output)
+    val modal = js("$('#error-dialog')")
+    modal.modal("show")
 }
 
-/** Construct a data URL containing the given data. */
-private suspend fun createDataUrl(data: ByteArray): String {
-    val blob = Blob(arrayOf(Int8Array(data.toTypedArray()).buffer))
+/** Initiate a user download of the given data. */
+private fun startDownload(fileName: String, data: ByteArray) {
     val reader = FileReader()
-    return suspendCoroutine { cont ->
-        reader.onload = { _ ->
-            cont.resume(reader.result)
-        }
-        reader.onerror = { _ ->
-            cont.resumeWithException(
-                Exception("Failed to create data URL, error ${reader.error.name}: ${reader.error.message}")
-            )
-        }
-        reader.readAsDataURL(blob)
+    reader.onload = { event ->
+        val link = document.createElement("a") as HTMLAnchorElement
+        link.download = fileName
+        link.href = event.target.asDynamic().result as String
+        link.click()
     }
+    reader.readAsDataURL(Blob(arrayOf(Int8Array(data.toTypedArray()).buffer)))
 }
 
 /**

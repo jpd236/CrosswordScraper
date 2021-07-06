@@ -16,6 +16,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:1.5.0")
     implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
+    implementation("com.github.ajalt.colormath:colormath:2.1.0")
 
     implementation("com.jeffpdavidson.kotwords:kotwords-js:1.0.1-SNAPSHOT")
 
@@ -33,7 +34,6 @@ kotlin {
                 // The default devtool uses eval(), which is forbidden in extensions. And we inline the map so we don't
                 // need to configure the extension to load additional resources for the map.
                 devtool = org.jetbrains.kotlin.gradle.targets.js.webpack.WebpackDevtool.INLINE_CHEAP_MODULE_SOURCE_MAP
-                outputFileName = "popup.js"
             }
         }
     }

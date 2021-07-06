@@ -12,7 +12,7 @@ object PuzzleLinkSource : Source {
 
     override val sourceName: String = "Puzzle Link"
 
-    override fun matchesUrl(url: URL): Boolean = true
+    override fun matchesUrl(url: URL): Boolean = url.protocol == "http:" || url.protocol == "https:"
 
     override suspend fun scrapePuzzles(url: URL, frameId: Int, isTopLevel: Boolean): ScrapeResult {
         // We can't access the frame contents of internal frames without requesting permissions up front, so just assume

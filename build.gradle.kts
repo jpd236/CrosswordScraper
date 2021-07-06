@@ -52,10 +52,9 @@ tasks {
         val copyBundleFile = register<Copy>("copy${env.capitalize()}BundleFile") {
             dependsOn(browserWebpackTask)
             from("build/distributions") {
-                include("*.js")
+                include("*.js", "*.js.LICENSE.txt")
             }
-            println("extension folder for $env is $extensionFolder")
-            into(extensionFolder)
+            into("$extensionFolder/js")
         }
 
         val copyResources = register<Copy>("copy${env.capitalize()}Resources") {
@@ -66,6 +65,7 @@ tasks {
         val copyJsDeps = register<Copy>("copy${env.capitalize()}JsDeps") {
             from("build/js/node_modules/jquery/dist") {
                 include("jquery.slim.min.js")
+                into("js")
             }
             from("build/js/node_modules/bootstrap/dist") {
                 include("css/bootstrap.min.css")
@@ -73,6 +73,7 @@ tasks {
             }
             from("build/js/node_modules/webextension-polyfill/dist") {
                 include("browser-polyfill.min.js")
+                into("js")
             }
             into(extensionFolder)
         }

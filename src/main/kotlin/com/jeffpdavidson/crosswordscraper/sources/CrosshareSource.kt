@@ -5,10 +5,9 @@ import com.jeffpdavidson.crosswordscraper.Scraping
 import com.jeffpdavidson.crosswordscraper.sources.Source.Companion.hostIsDomainOrSubdomainOf
 import com.jeffpdavidson.kotwords.formats.AcrossLite
 import com.jeffpdavidson.kotwords.formats.Crosshare
-import com.jeffpdavidson.kotwords.formats.Crosswordable
 import org.w3c.dom.url.URL
 
-object CrosshareSource : Source {
+object CrosshareSource : FixedHostSource() {
 
     private val PUZZLE_ID_PATTERN = "crosswords/([^/]+)".toRegex()
 
@@ -20,7 +19,7 @@ object CrosshareSource : Source {
                 (url.pathname.startsWith("/crosswords/") || (url.pathname.startsWith("/embed/")))
     }
 
-    override suspend fun scrapePuzzle(url: URL, frameId: Int): Crosswordable? {
+    override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult {
         // First, try to scrape from the __NEXT_DATA__ JSON on the current page. This works for direct links to
         // Crosshare puzzles, but may contain other data if the user navigated to this page from another Crosshare
         // page.
@@ -33,7 +32,7 @@ object CrosshareSource : Source {
                 // puzzle.
                 val pageTitle = Scraping.readGlobalString(frameId, "document.title")
                 if (pageTitle.startsWith(crossword.title)) {
-                    return crosshare
+                    return ScrapeResult.Success(listOf(crosshare))
                 } else {
                     console.info("JSON in __NEXT_DATA__ is for a different puzzle; falling back to PUZ API")
                 }
@@ -43,8 +42,11 @@ object CrosshareSource : Source {
         }
 
         // Fall back to the PUZ API - this requires a separate fetch, but should always work.
-        val matchResult = PUZZLE_ID_PATTERN.find(url.toString()) ?: return null
+        val matchResult = PUZZLE_ID_PATTERN.find(url.toString()) ?: return ScrapeResult.Success(listOf())
+        if (!hasPermissions(neededHostPermissions)) {
+            return ScrapeResult.NeedPermissions(neededHostPermissions)
+        }
         val puzzleId = matchResult.groupValues[1]
-        return AcrossLite(Http.fetchAsBinary("https://crosshare.org/api/puz/$puzzleId"))
+        return ScrapeResult.Success(listOf(AcrossLite(Http.fetchAsBinary("https://crosshare.org/api/puz/$puzzleId"))))
     }
 }

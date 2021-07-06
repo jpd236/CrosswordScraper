@@ -49,8 +49,16 @@ object Scraping {
     suspend fun readGlobalJson(frameId: Int, varName: String): String =
         executeCommandForString(frameId, "window.$varName === undefined ? \"\" : JSON.stringify(window.$varName)")
 
-    /** Obtain the output of a Javascript command run inside a frame. */
-    private suspend fun executeCommandForString(frameId: Int, command: String): String {
+    /**
+     * Obtain the output of a Javascript command run inside a frame which returns a string.
+     *
+     * The extension must hold the host permission corresponding to the frame's URL.
+     *
+     * @param frameId ID of the frame to pull the global variable from
+     * @param command the command to run. Should always return a string. Single quotes must be escaped.
+     * @return the result of the command, or the empty string if the variable is undefined
+     */
+    suspend fun executeCommandForString(frameId: Int, command: String): String {
         // The popup runs in an isolated context from the scraped frame, so we first need to inject a script to access
         // the frame. In addition, since the script runs in an isolated context, it can only access the DOM and not any
         // variables (see https://developer.chrome.com/docs/extensions/mv3/content_scripts/). So we inject a script into

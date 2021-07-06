@@ -17,8 +17,10 @@ object PdfFonts {
                     PdfFont.TtfFont("NotoSerif", "normal", Http.fetchAsBinary(getURL("fonts/NotoSerif-Regular.ttf"))),
                     PdfFont.TtfFont("NotoSerif", "bold", Http.fetchAsBinary(getURL("fonts/NotoSerif-Bold.ttf"))),
                     PdfFont.TtfFont("NotoSerif", "italic", Http.fetchAsBinary(getURL("fonts/NotoSerif-Italic.ttf"))),
-                    PdfFont.TtfFont("NotoSerif", "bolditalic",
-                        Http.fetchAsBinary(getURL("fonts/NotoSerif-BoldItalic.ttf"))),
+                    PdfFont.TtfFont(
+                        "NotoSerif", "bolditalic",
+                        Http.fetchAsBinary(getURL("fonts/NotoSerif-BoldItalic.ttf"))
+                    ),
                 )
             }
         }

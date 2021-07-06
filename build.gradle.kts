@@ -1,5 +1,6 @@
 plugins {
     kotlin("js") version "1.5.20"
+    kotlin("plugin.serialization") version "1.5.0"
 }
 
 group = "com.jeffpdavidson"
@@ -14,6 +15,7 @@ repositories {
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:1.5.0")
     implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 
     implementation("com.jeffpdavidson.kotwords:kotwords-js:1.0.1-SNAPSHOT")
 

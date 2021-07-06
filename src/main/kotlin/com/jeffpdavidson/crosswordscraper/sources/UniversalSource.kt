@@ -1,11 +1,10 @@
 package com.jeffpdavidson.crosswordscraper.sources
 
 import com.jeffpdavidson.crosswordscraper.Scraping
-import com.jeffpdavidson.kotwords.formats.Crosswordable
 import com.jeffpdavidson.kotwords.formats.UclickJson
 import org.w3c.dom.url.URL
 
-object UniversalSource : Source {
+object UniversalSource : FixedHostSource() {
 
     override val sourceName: String = "Universal Uclick"
     override val neededHostPermissions = listOf("https://*.universaluclick.com/*")
@@ -14,11 +13,11 @@ object UniversalSource : Source {
         return url.host == "embed.universaluclick.com"
     }
 
-    override suspend fun scrapePuzzle(url: URL, frameId: Int): Crosswordable? {
+    override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult {
         val puzzleJson = Scraping.readGlobalJson(frameId, "crossword.jsonData")
         if (puzzleJson.isNotEmpty()) {
-            return UclickJson(puzzleJson)
+            return ScrapeResult.Success(listOf(UclickJson(puzzleJson)))
         }
-        return null
+        return ScrapeResult.Success(listOf())
     }
 }

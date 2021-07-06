@@ -15,12 +15,8 @@
     "webNavigation"
   ],
   "optional_permissions": [
-    "https://*.amuselabs.com/*",
-    "https://*.crosshare.org/*",
-    "https://*.universaluclick.com/*",
-    "https://*.wsj.com/*",
-    "https://*.bostonglobe.com/*",
-    "https://*.worldofcrosswords.com/*"
+    "http://*/",
+    "https://*/"
   ],
   "web_accessible_resources": [
     "fonts/*.ttf"

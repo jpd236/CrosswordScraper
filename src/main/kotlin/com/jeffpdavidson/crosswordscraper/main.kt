@@ -4,14 +4,14 @@ import browser.permissions.Permissions
 import com.jeffpdavidson.crosswordscraper.sources.AmuseLabsSource
 import com.jeffpdavidson.crosswordscraper.sources.BostonGlobeSource
 import com.jeffpdavidson.crosswordscraper.sources.CrosshareSource
+import com.jeffpdavidson.crosswordscraper.sources.PuzzleLinkSource
+import com.jeffpdavidson.crosswordscraper.sources.ScrapeResult
 import com.jeffpdavidson.crosswordscraper.sources.UniversalSource
 import com.jeffpdavidson.crosswordscraper.sources.WallStreetJournalSource
 import com.jeffpdavidson.crosswordscraper.sources.WorldOfCrosswordsSource
-import com.jeffpdavidson.kotwords.formats.Crosswordable
 import com.jeffpdavidson.kotwords.model.Crossword
 import kotlinx.browser.document
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.await
 import kotlinx.coroutines.launch
 import kotlinx.dom.addClass
 import kotlinx.dom.clear
@@ -44,6 +44,7 @@ private val SOURCES = listOf(
     AmuseLabsSource,
     BostonGlobeSource,
     CrosshareSource,
+    PuzzleLinkSource,
     UniversalSource,
     WallStreetJournalSource,
     WorldOfCrosswordsSource,
@@ -63,16 +64,18 @@ private suspend fun launchCrosswordScraper() {
                 puzzles.forEach { scrapedPuzzle ->
                     li(classes = "list-group-item") {
                         when (scrapedPuzzle) {
-                            is ScrapeResult.Success -> renderScrapeSuccess(scrapedPuzzle)
-                            is ScrapeResult.Error -> renderScrapeError(scrapedPuzzle)
-                            is ScrapeResult.NeedPermissions -> renderPermissionPrompt(scrapedPuzzle) { granted ->
-                                // In practice, the popup seems to be closed after a permission prompt, but
-                                // in case that changes, retry the scrape if the permission was granted.
-                                // See https://bugs.chromium.org/p/chromium/issues/detail?id=952645.
-                                if (granted) {
-                                    puzzleContainer.clear()
-                                    GlobalScope.launch {
-                                        launchCrosswordScraper()
+                            is ProcessedScrapeResult.Success -> renderScrapeSuccess(scrapedPuzzle)
+                            is ProcessedScrapeResult.Error -> renderScrapeError(scrapedPuzzle)
+                            is ProcessedScrapeResult.NeedPermissions -> {
+                                renderPermissionPrompt(scrapedPuzzle) { granted ->
+                                    // In practice, the popup seems to be closed after a permission prompt, but
+                                    // in case that changes, retry the scrape if the permission was granted.
+                                    // See https://bugs.chromium.org/p/chromium/issues/detail?id=952645.
+                                    if (granted) {
+                                        puzzleContainer.clear()
+                                        GlobalScope.launch {
+                                            launchCrosswordScraper()
+                                        }
                                     }
                                 }
                             }
@@ -88,30 +91,56 @@ private suspend fun launchCrosswordScraper() {
     puzzleContainer.removeClass("d-none")
 }
 
+private sealed class ProcessedScrapeResult {
+    data class Success(
+        val source: String,
+        val crossword: Crossword,
+        /** Map from FileFormat to a data URL containing the crossword data in that format. */
+        val output: Map<FileFormat, String>
+    ) : ProcessedScrapeResult()
+
+    data class NeedPermissions(val source: String, val permissions: List<String>) : ProcessedScrapeResult()
+    data class Error(val source: String) : ProcessedScrapeResult()
+}
+
 /** Scrape puzzles from all frames in the user's active tab. */
-private suspend fun scrapePuzzles(): Set<ScrapeResult> {
+private suspend fun scrapePuzzles(): Set<ProcessedScrapeResult> {
     val frames = Scraping.getAllFrames()
-    val puzzles = mutableSetOf<ScrapeResult>()
+    val puzzles = mutableSetOf<ProcessedScrapeResult>()
+    val processedCrosswords = mutableListOf<Crossword>()
     // TODO: Investigate whether parallelizing scrapes improves performance on pages with many puzzles.
     frames.forEach { frame ->
+        val isTopLevel = frame.parentFrameId == -1
         SOURCES.forEach { source ->
             val url = URL(frame.url)
             if (source.matchesUrl(url)) {
-                val neededPermissions = source.neededHostPermissions
-                val hasPermissions = neededPermissions.isEmpty() ||
-                        browser.permissions.contains(Permissions { origins = neededPermissions.toTypedArray() }).await()
-                if (!hasPermissions) {
-                    puzzles.add(ScrapeResult.NeedPermissions(source.sourceName, neededPermissions))
-                } else {
-                    try {
-                        val puzzle = source.scrapePuzzle(url, frame.frameId)
-                        if (puzzle != null) {
-                            puzzles.add(createOutputFiles(source.sourceName, puzzle))
+                try {
+                    when (val result = source.scrapePuzzles(url, frame.frameId, isTopLevel)) {
+                        is ScrapeResult.Success -> {
+                            result.crosswords.forEach { crosswordable ->
+                                try {
+                                    val crossword = crosswordable.asCrossword()
+                                    if (!isDuplicate(processedCrosswords, crossword)) {
+                                        puzzles.add(createOutputFiles(source.sourceName, crossword))
+                                        processedCrosswords.add(crossword)
+                                    }
+                                } catch (t: Throwable) {
+                                    console.error(
+                                        "Error converting ${source.sourceName} data to crossword:",
+                                        t.stackTraceToString()
+                                    )
+                                    puzzles.add(ProcessedScrapeResult.Error(source.sourceName))
+                                }
+                            }
                         }
-                    } catch (t: Throwable) {
-                        console.error("Error scraping puzzle for source ${source.sourceName}", t.stackTraceToString())
-                        puzzles.add(ScrapeResult.Error(source.sourceName))
+                        is ScrapeResult.NeedPermissions ->
+                            puzzles.add(ProcessedScrapeResult.NeedPermissions(source.sourceName, result.permissions))
+                        is ScrapeResult.Error ->
+                            puzzles.add(ProcessedScrapeResult.Error(source.sourceName))
                     }
+                } catch (t: Throwable) {
+                    console.error("Error scraping puzzles for source ${source.sourceName}", t.stackTraceToString())
+                    puzzles.add(ProcessedScrapeResult.Error(source.sourceName))
                 }
             }
         }
@@ -119,7 +148,7 @@ private suspend fun scrapePuzzles(): Set<ScrapeResult> {
     return puzzles
 }
 
-private fun HtmlBlockTag.renderScrapeSuccess(scrapedPuzzle: ScrapeResult.Success) {
+private fun HtmlBlockTag.renderScrapeSuccess(scrapedPuzzle: ProcessedScrapeResult.Success) {
     // Title to display in the UI - in descending priority, title, then author, then scraping source.
     val title = scrapedPuzzle.crossword.title.ifEmpty {
         scrapedPuzzle.crossword.author.ifEmpty {
@@ -159,7 +188,7 @@ private fun HtmlBlockTag.renderScrapeSuccess(scrapedPuzzle: ScrapeResult.Success
     }
 }
 
-private fun HtmlBlockTag.renderScrapeError(scrapedPuzzle: ScrapeResult.Error) {
+private fun HtmlBlockTag.renderScrapeError(scrapedPuzzle: ProcessedScrapeResult.Error) {
     classes = classes + "disabled"
     div(classes = "mb-1") {
         +scrapedPuzzle.source
@@ -168,7 +197,7 @@ private fun HtmlBlockTag.renderScrapeError(scrapedPuzzle: ScrapeResult.Error) {
 }
 
 private fun HtmlBlockTag.renderPermissionPrompt(
-    scrapedPuzzle: ScrapeResult.NeedPermissions,
+    scrapedPuzzle: ProcessedScrapeResult.NeedPermissions,
     onGrantFn: (Boolean) -> Unit,
 ) {
     div(classes = "mb-1") {
@@ -186,20 +215,12 @@ private fun HtmlBlockTag.renderPermissionPrompt(
 }
 
 /**
- * Attempt to create all supported output files for the given [Crosswordable].
+ * Attempt to create all supported output files for the given [Crossword].
  *
- * @return [ScrapeResult.Success] containing all output files that were successfully created. Returns
- *   [ScrapeResult.Error] if the crosswordable fails to generate a [Crossword], or if the given [Crossword] fails
- *   to convert to all supported formats.
+ * @return [ProcessedScrapeResult.Success] containing all output files that were successfully created. Returns
+ *   [ProcessedScrapeResult.Error] if the given [Crossword] fails to convert to all supported formats.
  */
-private suspend fun createOutputFiles(source: String, crosswordable: Crosswordable): ScrapeResult {
-    val crossword = try {
-        crosswordable.asCrossword()
-    } catch (t: Throwable) {
-        console.error("Error converting $source data to crossword:", t.stackTraceToString())
-        return ScrapeResult.Error(source)
-    }
-
+private suspend fun createOutputFiles(source: String, crossword: Crossword): ProcessedScrapeResult {
     // TODO: Investigate whether parallelizing conversions improves performance.
     val output = FileFormat.values().mapNotNull { fileFormat ->
         try {
@@ -212,10 +233,10 @@ private suspend fun createOutputFiles(source: String, crosswordable: Crosswordab
 
     if (output.isEmpty()) {
         console.error("Could not convert to any supported format")
-        return ScrapeResult.Error(source)
+        return ProcessedScrapeResult.Error(source)
     }
 
-    return ScrapeResult.Success(source, crossword, output)
+    return ProcessedScrapeResult.Success(source, crossword, output)
 }
 
 /** Construct a data URL containing the given data. */
@@ -232,5 +253,36 @@ private suspend fun createDataUrl(data: ByteArray): String {
             )
         }
         reader.readAsDataURL(blob)
+    }
+}
+
+/**
+ * Whether the given [crossword] is likely a duplicate of a crossword in [processedCrosswords].
+ *
+ * Since a page may have two different sources for the same puzzle - e.g. a .puz link and an AmuseLabs applet - we can't
+ * rely on exact comparisons as different sources have different features. As a simple spot check, we see whether the
+ * solution characters are identical for at least 60% of the grid.
+ */
+private fun isDuplicate(processedCrosswords: List<Crossword>, crossword: Crossword): Boolean {
+    return processedCrosswords.any { processedCrossword ->
+        if (processedCrossword.grid.size != crossword.grid.size ||
+            processedCrossword.grid[0].size != crossword.grid[0].size
+        ) {
+            false
+        } else {
+            var identicalSquares = 0
+            var nonBlackOrDifferentSquares = 0
+            crossword.grid.forEachIndexed { y, row ->
+                row.forEachIndexed { x, square ->
+                    if (!square.isBlack && square.solution == processedCrossword.grid[y][x].solution) {
+                        identicalSquares++
+                    }
+                    if (!square.isBlack || square.isBlack != processedCrossword.grid[y][x].isBlack) {
+                        nonBlackOrDifferentSquares++
+                    }
+                }
+            }
+            identicalSquares.toDouble() / nonBlackOrDifferentSquares > 0.6
+        }
     }
 }

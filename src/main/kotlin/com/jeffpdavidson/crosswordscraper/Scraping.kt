@@ -5,6 +5,7 @@ import browser.tabs.QueryInfo
 import browser.webNavigation.Frame
 import browser.webNavigation.GetAllFramesDetails
 import kotlinx.coroutines.await
+import kotlin.random.Random
 
 /** Utilities for scraping content from the user's active tab. */
 object Scraping {
@@ -71,9 +72,9 @@ object Scraping {
             divElem.style.display = 'none';
             document.body.appendChild(divElem);
             var scriptElem = document.createElement('script');
-            scriptElem.innerHTML = 'document.getElementById("$divName").innerHTML = $command;';
+            scriptElem.innerHTML = 'document.getElementById("$divName").innerText = $command;';
             document.body.appendChild(scriptElem);
-            var data = divElem.innerHTML;
+            var data = divElem.innerText;
             document.body.removeChild(scriptElem);
             document.body.removeChild(divElem);
             data;

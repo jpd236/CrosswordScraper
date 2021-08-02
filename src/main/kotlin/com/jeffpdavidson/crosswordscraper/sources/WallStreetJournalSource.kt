@@ -2,6 +2,7 @@ package com.jeffpdavidson.crosswordscraper.sources
 
 import com.jeffpdavidson.crosswordscraper.Scraping
 import com.jeffpdavidson.kotwords.formats.WallStreetJournal
+import com.jeffpdavidson.kotwords.formats.WallStreetJournalAcrostic
 import org.w3c.dom.url.URL
 
 object WallStreetJournalSource : FixedHostSource() {
@@ -15,10 +16,32 @@ object WallStreetJournalSource : FixedHostSource() {
     }
 
     override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult {
-        val puzzleJson = Scraping.readGlobalJson(frameId, "oApp.puzzle.JSON")
-        if (puzzleJson.isNotEmpty()) {
-            return ScrapeResult.Success(listOf(WallStreetJournal(puzzleJson)))
+        val puzzleJsonString = Scraping.readGlobalJson(frameId, "oApp.puzzle.JSON")
+        if (puzzleJsonString.isEmpty()) {
+            return ScrapeResult.Success()
         }
-        return ScrapeResult.Success(listOf())
+        val puzzleJson = JSON.parse<PuzzleJson>(puzzleJsonString)
+        if (puzzleJson.data.meta.type == "acrostic") {
+            return ScrapeResult.Success(
+                puzzles = listOf(
+                    WallStreetJournalAcrostic(
+                        JSON.stringify(puzzleJson.data)
+                    ).asAcrostic().asPuzzle(includeAttribution = true)
+                )
+            )
+        }
+        return ScrapeResult.Success(crosswords = listOf(WallStreetJournal(puzzleJsonString)))
+    }
+
+    private interface Meta {
+        val type: String?
+    }
+
+    private interface Data {
+        val meta: Meta
+    }
+
+    private interface PuzzleJson {
+        val data: Data
     }
 }

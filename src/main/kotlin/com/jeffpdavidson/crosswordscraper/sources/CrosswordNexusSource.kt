@@ -59,19 +59,19 @@ object CrosswordNexusSource : FixedHostSource() {
 }
 
 // Kotlin's URLSearchParams wrapper doesn't expose a keys() method, so we have to expose it ourselves.
-private fun URLSearchParams.values() : Iterable<String> =
+private fun URLSearchParams.values(): Iterable<String> =
     asDynamic().values().unsafeCast<JsIterator<String>>().iterable()
 
 private external interface JsIterator<T> {
-    fun next() : JsIteratorResult<T>
+    fun next(): JsIteratorResult<T>
 }
 
 private external class JsIteratorResult<T> {
-    val done : Boolean
-    val value : T?
+    val done: Boolean
+    val value: T?
 }
 
-private fun <T> JsIterator<T>.iterable() : Iterable<T> {
+private fun <T> JsIterator<T>.iterable(): Iterable<T> {
     return object : Iterable<T> {
         override fun iterator(): Iterator<T> =
             object : Iterator<T> {

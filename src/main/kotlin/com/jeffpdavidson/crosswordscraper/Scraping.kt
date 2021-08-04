@@ -5,7 +5,6 @@ import browser.tabs.QueryInfo
 import browser.webNavigation.Frame
 import browser.webNavigation.GetAllFramesDetails
 import kotlinx.coroutines.await
-import kotlin.random.Random
 
 /** Utilities for scraping content from the user's active tab. */
 object Scraping {

@@ -4,12 +4,12 @@ plugins {
 }
 
 group = "com.jeffpdavidson"
-version = "1.2.0"
+version = "1.2.1-SNAPSHOT"
 
 repositories {
     mavenCentral()
-    // TODO: Reenable for next SNAPSHOT.
-    // maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
+    // TODO: Remove ahead of public release.
+    maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
 }
 
 dependencies {
@@ -18,7 +18,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
     implementation("com.github.ajalt.colormath:colormath:2.1.0")
 
-    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.2.0")
+    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.2.1-SNAPSHOT")
 
     runtimeOnly(npm("webextension-polyfill", "0.7.0"))
     runtimeOnly(npm("jquery", "3.5.1"))

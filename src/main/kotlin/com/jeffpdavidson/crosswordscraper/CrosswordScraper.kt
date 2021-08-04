@@ -5,6 +5,7 @@ import com.jeffpdavidson.crosswordscraper.sources.AmuseLabsSource
 import com.jeffpdavidson.crosswordscraper.sources.BostonGlobeSource
 import com.jeffpdavidson.crosswordscraper.sources.CrosshareSource
 import com.jeffpdavidson.crosswordscraper.sources.CrosswordNexusSource
+import com.jeffpdavidson.crosswordscraper.sources.NewYorkTimesSource
 import com.jeffpdavidson.crosswordscraper.sources.PuzzleLinkSource
 import com.jeffpdavidson.crosswordscraper.sources.ScrapeResult
 import com.jeffpdavidson.crosswordscraper.sources.Source
@@ -42,15 +43,23 @@ import org.w3c.files.FileReader
 
 /** Core logic of the scraper - render the popup page and perform scraping. */
 object CrosswordScraper {
+    /**
+     * Ordered list of sources.
+     *
+     * If a duplicate grid (per [isDuplicate]) is found, the earlier source in the list is preferred.
+     */
     private val SOURCES = listOf(
         AmuseLabsSource,
         BostonGlobeSource,
         CrosshareSource,
         CrosswordNexusSource,
-        PuzzleLinkSource,
+        NewYorkTimesSource,
         UniversalSource,
         WallStreetJournalSource,
         WorldOfCrosswordsSource,
+
+        // Prefer extracted puzzles from applets to .puz files, which tend to be more constrained.
+        PuzzleLinkSource,
     )
 
     /** Render the popup page. Intended to be loaded from popup.html. */
@@ -104,7 +113,7 @@ object CrosswordScraper {
     private sealed class ProcessedScrapeResult {
         sealed class Successful : ProcessedScrapeResult()
         data class SuccessfulCrossword(val source: String, val crossword: Crossword) : Successful()
-        data class SuccessfulPuzzle(val source: String, val puzzle: Puzzle) : Successful()
+        data class SuccessfulPuzzle(val source: String, val puzzle: Puzzle, val isCrosswordLike: Boolean) : Successful()
         data class NeedPermissions(val source: String, val permissions: List<String>) : ProcessedScrapeResult()
         data class Error(val source: String) : ProcessedScrapeResult()
     }
@@ -158,9 +167,19 @@ object CrosswordScraper {
                                                 if (cell.solution.isNotEmpty()) cell.solution[0] else null
                                             }
                                         }
-                                        ProcessedScrapeResult.SuccessfulPuzzle(source.sourceName, puzzle) to grid
+                                        ProcessedScrapeResult.SuccessfulPuzzle(
+                                            source.sourceName,
+                                            puzzle,
+                                            result.puzzlesAreCrosswordLike
+                                        ) to grid
                                     }
-                                    puzzles.add(ProcessedScrapeResult.SuccessfulPuzzle(source.sourceName, puzzle))
+                                    puzzles.add(
+                                        ProcessedScrapeResult.SuccessfulPuzzle(
+                                            source.sourceName,
+                                            puzzle,
+                                            result.puzzlesAreCrosswordLike
+                                        )
+                                    )
                                 }
                             }
                             is ScrapeResult.NeedPermissions ->
@@ -219,7 +238,9 @@ object CrosswordScraper {
         // Render each download link labeled by the extension, separated by "|".
         FileFormat.values()
             .filter { fileFormat ->
-                scrapedPuzzle is ProcessedScrapeResult.SuccessfulCrossword || fileFormat.puzzleToBinary != null
+                scrapedPuzzle is ProcessedScrapeResult.SuccessfulCrossword ||
+                        fileFormat.puzzleToBinary != null ||
+                        (scrapedPuzzle as ProcessedScrapeResult.SuccessfulPuzzle).isCrosswordLike
             }
             .forEachIndexed { i, fileFormat ->
                 if (i > 0) {
@@ -235,8 +256,16 @@ object CrosswordScraper {
                                     when (scrapedPuzzle) {
                                         is ProcessedScrapeResult.SuccessfulCrossword ->
                                             fileFormat.crosswordToBinary(scrapedPuzzle.crossword)
-                                        is ProcessedScrapeResult.SuccessfulPuzzle ->
-                                            fileFormat.puzzleToBinary!!(scrapedPuzzle.puzzle)
+                                        is ProcessedScrapeResult.SuccessfulPuzzle -> {
+                                            if (fileFormat.puzzleToBinary != null) {
+                                                fileFormat.puzzleToBinary!!(scrapedPuzzle.puzzle)
+                                            } else {
+                                                // Puzzle is crossword-like, so convert to crossword and then binary.
+                                                val crossword = scrapedPuzzle.puzzle.asJpzFile().asCrossword()
+                                                fileFormat.crosswordToBinary(crossword)
+                                            }
+                                        }
+
                                     }
                                 )
                             } catch (t: Throwable) {

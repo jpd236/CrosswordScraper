@@ -122,10 +122,10 @@ object CrosswordScraper {
     private suspend fun scrapePuzzles(): Set<ProcessedScrapeResult> {
         val frames = Scraping.getAllFrames()
         val puzzles = mutableSetOf<ProcessedScrapeResult>()
-        val processedGrids = mutableListOf<List<List<Char?>>>()
+        val processedGrids = mutableListOf<List<List<String?>>>()
         fun processSuccessfulScrape(
             source: Source,
-            processResultFn: () -> Pair<ProcessedScrapeResult.Successful, List<List<Char?>>>
+            processResultFn: () -> Pair<ProcessedScrapeResult.Successful, List<List<String?>>>
         ) {
             try {
                 val (processedResult, grid) = processResultFn()
@@ -164,7 +164,7 @@ object CrosswordScraper {
                                     processSuccessfulScrape(source) {
                                         val grid = puzzle.grid.map { row ->
                                             row.map { cell ->
-                                                if (cell.solution.isNotEmpty()) cell.solution[0] else null
+                                                cell.solution.ifEmpty { null }
                                             }
                                         }
                                         ProcessedScrapeResult.SuccessfulPuzzle(
@@ -360,7 +360,7 @@ object CrosswordScraper {
      * can't rely on exact comparisons as different sources have different features. As a simple spot check, we see
      * whether the solution characters are identical for at least 60% of the grid.
      */
-    private fun isDuplicate(processedGrids: List<List<List<Char?>>>, grid: List<List<Char?>>): Boolean {
+    private fun isDuplicate(processedGrids: List<List<List<String?>>>, grid: List<List<String?>>): Boolean {
         return processedGrids.any { processedGrid ->
             if (processedGrid.size != grid.size || processedGrid[0].size != grid[0].size) {
                 false

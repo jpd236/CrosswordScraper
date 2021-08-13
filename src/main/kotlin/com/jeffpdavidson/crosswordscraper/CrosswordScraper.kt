@@ -8,11 +8,9 @@ import com.jeffpdavidson.crosswordscraper.sources.CrosswordNexusSource
 import com.jeffpdavidson.crosswordscraper.sources.NewYorkTimesSource
 import com.jeffpdavidson.crosswordscraper.sources.PuzzleLinkSource
 import com.jeffpdavidson.crosswordscraper.sources.ScrapeResult
-import com.jeffpdavidson.crosswordscraper.sources.Source
 import com.jeffpdavidson.crosswordscraper.sources.UniversalSource
 import com.jeffpdavidson.crosswordscraper.sources.WallStreetJournalSource
 import com.jeffpdavidson.crosswordscraper.sources.WorldOfCrosswordsSource
-import com.jeffpdavidson.kotwords.model.Crossword
 import com.jeffpdavidson.kotwords.model.Puzzle
 import kotlinx.browser.document
 import kotlinx.coroutines.GlobalScope
@@ -77,7 +75,7 @@ object CrosswordScraper {
                     puzzles.forEach { scrapedPuzzle ->
                         li(classes = "list-group-item") {
                             when (scrapedPuzzle) {
-                                is ProcessedScrapeResult.Successful -> renderScrapeSuccess(scrapedPuzzle)
+                                is ProcessedScrapeResult.Success -> renderScrapeSuccess(scrapedPuzzle)
                                 is ProcessedScrapeResult.Error -> renderScrapeError(scrapedPuzzle)
                                 is ProcessedScrapeResult.NeedPermissions -> {
                                     renderPermissionPrompt(scrapedPuzzle) { granted ->
@@ -111,9 +109,7 @@ object CrosswordScraper {
     }
 
     private sealed class ProcessedScrapeResult {
-        sealed class Successful : ProcessedScrapeResult()
-        data class SuccessfulCrossword(val source: String, val crossword: Crossword) : Successful()
-        data class SuccessfulPuzzle(val source: String, val puzzle: Puzzle, val isCrosswordLike: Boolean) : Successful()
+        data class Success(val source: String, val puzzle: Puzzle) : ProcessedScrapeResult()
         data class NeedPermissions(val source: String, val permissions: List<String>) : ProcessedScrapeResult()
         data class Error(val source: String) : ProcessedScrapeResult()
     }
@@ -122,25 +118,7 @@ object CrosswordScraper {
     private suspend fun scrapePuzzles(): Set<ProcessedScrapeResult> {
         val frames = Scraping.getAllFrames()
         val puzzles = mutableSetOf<ProcessedScrapeResult>()
-        val processedGrids = mutableListOf<List<List<String?>>>()
-        fun processSuccessfulScrape(
-            source: Source,
-            processResultFn: () -> Pair<ProcessedScrapeResult.Successful, List<List<String?>>>
-        ) {
-            try {
-                val (processedResult, grid) = processResultFn()
-                if (!isDuplicate(processedGrids, grid)) {
-                    puzzles.add(processedResult)
-                    processedGrids.add(grid)
-                }
-            } catch (t: Throwable) {
-                console.error(
-                    "Error converting ${source.sourceName} data to crossword:",
-                    t.stackTraceToString()
-                )
-                puzzles.add(ProcessedScrapeResult.Error(source.sourceName))
-            }
-        }
+        val processedGrids = mutableListOf<List<List<Puzzle.Cell>>>()
         frames.forEach { frame ->
             val isTopLevel = frame.parentFrameId == -1
             SOURCES.forEach { source ->
@@ -149,37 +127,20 @@ object CrosswordScraper {
                     try {
                         when (val result = source.scrapePuzzles(url, frame.frameId, isTopLevel)) {
                             is ScrapeResult.Success -> {
-                                result.crosswords.forEach { crosswordable ->
-                                    processSuccessfulScrape(source) {
-                                        val crossword = crosswordable.asCrossword()
-                                        val grid = crossword.grid.map { row ->
-                                            row.map { square ->
-                                                square.solution
-                                            }
+                                result.puzzles.forEach { puzzleable ->
+                                    try {
+                                        val puzzle = puzzleable.asPuzzle()
+                                        if (!isDuplicate(processedGrids, puzzle.grid)) {
+                                            puzzles.add(ProcessedScrapeResult.Success(source.sourceName, puzzle))
+                                            processedGrids.add(puzzle.grid)
                                         }
-                                        ProcessedScrapeResult.SuccessfulCrossword(source.sourceName, crossword) to grid
-                                    }
-                                }
-                                result.puzzles.forEach { puzzle ->
-                                    processSuccessfulScrape(source) {
-                                        val grid = puzzle.grid.map { row ->
-                                            row.map { cell ->
-                                                cell.solution.ifEmpty { null }
-                                            }
-                                        }
-                                        ProcessedScrapeResult.SuccessfulPuzzle(
-                                            source.sourceName,
-                                            puzzle,
-                                            result.puzzlesAreCrosswordLike
-                                        ) to grid
-                                    }
-                                    puzzles.add(
-                                        ProcessedScrapeResult.SuccessfulPuzzle(
-                                            source.sourceName,
-                                            puzzle,
-                                            result.puzzlesAreCrosswordLike
+                                    } catch (t: Throwable) {
+                                        console.error(
+                                            "Error converting ${source.sourceName} data to crossword:",
+                                            t.stackTraceToString()
                                         )
-                                    )
+                                        puzzles.add(ProcessedScrapeResult.Error(source.sourceName))
+                                    }
                                 }
                             }
                             is ScrapeResult.NeedPermissions ->
@@ -199,23 +160,11 @@ object CrosswordScraper {
         return puzzles
     }
 
-    private fun HtmlBlockTag.renderScrapeSuccess(scrapedPuzzle: ProcessedScrapeResult.Successful) {
+    private fun HtmlBlockTag.renderScrapeSuccess(scrapedPuzzle: ProcessedScrapeResult.Success) {
         // Title to display in the UI - in descending priority, title, then author, then scraping source.
-        val puzzleTitle: String
-        val puzzleAuthor: String
-        val source: String
-        when (scrapedPuzzle) {
-            is ProcessedScrapeResult.SuccessfulCrossword -> {
-                puzzleTitle = scrapedPuzzle.crossword.title
-                puzzleAuthor = scrapedPuzzle.crossword.author
-                source = scrapedPuzzle.source
-            }
-            is ProcessedScrapeResult.SuccessfulPuzzle -> {
-                puzzleTitle = scrapedPuzzle.puzzle.title
-                puzzleAuthor = scrapedPuzzle.puzzle.creator
-                source = scrapedPuzzle.source
-            }
-        }
+        val puzzleTitle = scrapedPuzzle.puzzle.title
+        val puzzleAuthor = scrapedPuzzle.puzzle.creator
+        val source = scrapedPuzzle.source
         val title = puzzleTitle.ifEmpty { puzzleAuthor.ifEmpty { source } }
         div(classes = "mb-1") {
             +title
@@ -237,11 +186,7 @@ object CrosswordScraper {
 
         // Render each download link labeled by the extension, separated by "|".
         FileFormat.values()
-            .filter { fileFormat ->
-                scrapedPuzzle is ProcessedScrapeResult.SuccessfulCrossword ||
-                        fileFormat.puzzleToBinary != null ||
-                        (scrapedPuzzle as ProcessedScrapeResult.SuccessfulPuzzle).isCrosswordLike
-            }
+            .filter { fileFormat -> fileFormat.supportsPuzzle(scrapedPuzzle.puzzle) }
             .forEachIndexed { i, fileFormat ->
                 if (i > 0) {
                     +" | "
@@ -253,25 +198,13 @@ object CrosswordScraper {
                             try {
                                 startDownload(
                                     "$filenameBase.${fileFormat.extension}",
-                                    when (scrapedPuzzle) {
-                                        is ProcessedScrapeResult.SuccessfulCrossword ->
-                                            fileFormat.crosswordToBinary(scrapedPuzzle.crossword)
-                                        is ProcessedScrapeResult.SuccessfulPuzzle -> {
-                                            if (fileFormat.puzzleToBinary != null) {
-                                                fileFormat.puzzleToBinary!!(scrapedPuzzle.puzzle)
-                                            } else {
-                                                // Puzzle is crossword-like, so convert to crossword and then binary.
-                                                val crossword = scrapedPuzzle.puzzle.asJpzFile().asCrossword()
-                                                fileFormat.crosswordToBinary(crossword)
-                                            }
-                                        }
-
-                                    }
+                                    fileFormat.puzzleToBinary(scrapedPuzzle.puzzle)
                                 )
                             } catch (t: Throwable) {
                                 console.info("Error converting to ${fileFormat.name}:", t.stackTraceToString())
                                 showErrorModal(
-                                    "Error converting to ${fileFormat.extension.uppercase()}. Please try another format."
+                                    "Error converting to ${fileFormat.extension.uppercase()}. " +
+                                            "Please try another format."
                                 )
                             }
                         }
@@ -360,7 +293,7 @@ object CrosswordScraper {
      * can't rely on exact comparisons as different sources have different features. As a simple spot check, we see
      * whether the solution characters are identical for at least 60% of the grid.
      */
-    private fun isDuplicate(processedGrids: List<List<List<String?>>>, grid: List<List<String?>>): Boolean {
+    private fun isDuplicate(processedGrids: List<List<List<Puzzle.Cell>>>, grid: List<List<Puzzle.Cell>>): Boolean {
         return processedGrids.any { processedGrid ->
             if (processedGrid.size != grid.size || processedGrid[0].size != grid[0].size) {
                 false
@@ -368,11 +301,11 @@ object CrosswordScraper {
                 var identicalSquares = 0
                 var nonBlackOrDifferentSquares = 0
                 grid.forEachIndexed { y, row ->
-                    row.forEachIndexed { x, square ->
-                        if (square != null && square == processedGrid[y][x]) {
+                    row.forEachIndexed { x, cell ->
+                        if (!cell.cellType.isBlack() && cell.solution == processedGrid[y][x].solution) {
                             identicalSquares++
                         }
-                        if (square != null || processedGrid[y][x] != null) {
+                        if (!cell.cellType.isBlack() || !processedGrid[y][x].cellType.isBlack()) {
                             nonBlackOrDifferentSquares++
                         }
                     }

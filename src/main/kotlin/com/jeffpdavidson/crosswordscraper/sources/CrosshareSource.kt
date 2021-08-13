@@ -27,11 +27,11 @@ object CrosshareSource : FixedHostSource() {
         if (puzzleJson.isNotEmpty()) {
             try {
                 val crosshare = Crosshare(puzzleJson)
-                val crossword = crosshare.asCrossword()
+                val puzzle = crosshare.asPuzzle()
                 // Make sure the puzzle title matches the page title - otherwise, this data is probably for a different
                 // puzzle.
                 val pageTitle = Scraping.readGlobalString(frameId, "document.title")
-                if (pageTitle.startsWith(crossword.title)) {
+                if (pageTitle.startsWith(puzzle.title)) {
                     return ScrapeResult.Success(listOf(crosshare))
                 } else {
                     console.info("JSON in __NEXT_DATA__ is for a different puzzle; falling back to PUZ API")

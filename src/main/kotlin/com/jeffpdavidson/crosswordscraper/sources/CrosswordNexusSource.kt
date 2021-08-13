@@ -49,9 +49,8 @@ object CrosswordNexusSource : FixedHostSource() {
                 .partition { it.first.endsWith(".jpz") }
         return ScrapeResult.Success(
             puzzles = fetchedUrls.first.map {
-                Jpz.fromJpzFile(it.second).asPuzzle()
-            },
-            crosswords = fetchedUrls.second.map {
+                Jpz.fromJpzFile(it.second)
+            } + fetchedUrls.second.map {
                 AcrossLite(it.second)
             }
         )

@@ -18,8 +18,7 @@ object NewYorkTimesSource : FixedHostSource() {
         val pluribus = Scraping.readGlobalString(frameId, "pluribus")
         if (pluribus.isNotEmpty()) {
             return ScrapeResult.Success(
-                puzzles = listOf(NewYorkTimes.fromPluribus(pluribus).asPuzzle()),
-                puzzlesAreCrosswordLike = true,
+                puzzles = listOf(NewYorkTimes.fromPluribus(pluribus)),
             )
         }
         return ScrapeResult.Success(listOf())

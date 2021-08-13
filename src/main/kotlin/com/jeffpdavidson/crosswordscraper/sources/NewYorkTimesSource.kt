@@ -3,6 +3,7 @@ package com.jeffpdavidson.crosswordscraper.sources
 import com.jeffpdavidson.crosswordscraper.Scraping
 import com.jeffpdavidson.crosswordscraper.sources.Source.Companion.hostIsDomainOrSubdomainOf
 import com.jeffpdavidson.kotwords.formats.NewYorkTimes
+import com.jeffpdavidson.kotwords.formats.NewYorkTimesAcrostic
 import org.w3c.dom.url.URL
 
 object NewYorkTimesSource : FixedHostSource() {
@@ -19,6 +20,12 @@ object NewYorkTimesSource : FixedHostSource() {
         if (pluribus.isNotEmpty()) {
             return ScrapeResult.Success(
                 puzzles = listOf(NewYorkTimes.fromPluribus(pluribus)),
+            )
+        }
+        val gameData = Scraping.readGlobalString(frameId, "gameData")
+        if (gameData.isNotEmpty()) {
+            return ScrapeResult.Success(
+                puzzles = listOf(NewYorkTimesAcrostic.fromGameData(gameData)),
             )
         }
         return ScrapeResult.Success(listOf())

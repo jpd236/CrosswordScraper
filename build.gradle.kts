@@ -4,12 +4,12 @@ plugins {
 }
 
 group = "com.jeffpdavidson"
-version = "1.2.2"
+version = "1.2.3-SNAPSHOT"
 
 repositories {
     mavenCentral()
     // TODO: Remove ahead of public release.
-    // maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
+    maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
 }
 
 dependencies {

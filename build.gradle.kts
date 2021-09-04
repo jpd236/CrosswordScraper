@@ -1,5 +1,5 @@
 plugins {
-    kotlin("js") version "1.5.20"
+    kotlin("js") version "1.5.30"
     kotlin("plugin.serialization") version "1.5.0"
 }
 
@@ -13,22 +13,22 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:1.5.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:1.5.1")
     implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
     implementation("com.github.ajalt.colormath:colormath:2.1.0")
 
-    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.2.2")
+    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.2.3-SNAPSHOT")
 
-    runtimeOnly(npm("webextension-polyfill", "0.7.0"))
-    runtimeOnly(npm("jquery", "3.5.1"))
-    runtimeOnly(npm("bootstrap", "4.5.3"))
+    runtimeOnly(npm("webextension-polyfill", "0.8.0"))
+    runtimeOnly(npm("jquery", "3.6.0"))
+    runtimeOnly(npm("bootstrap", "4.6.0"))
 
     testImplementation(kotlin("test-js"))
 }
 
 kotlin {
-    js {
+    js(IR) {
         browser {
             webpackTask {
                 // The default devtool uses eval(), which is forbidden in extensions. And we inline the map so we don't
@@ -36,6 +36,7 @@ kotlin {
                 devtool = org.jetbrains.kotlin.gradle.targets.js.webpack.WebpackDevtool.INLINE_CHEAP_MODULE_SOURCE_MAP
             }
         }
+        binaries.executable()
     }
 }
 

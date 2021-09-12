@@ -1,15 +1,17 @@
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
+
 plugins {
     kotlin("js") version "1.5.30"
     kotlin("plugin.serialization") version "1.5.0"
 }
 
 group = "com.jeffpdavidson"
-version = "1.2.3-SNAPSHOT"
+version = "1.2.3"
 
 repositories {
     mavenCentral()
     // TODO: Remove ahead of public release.
-    maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
+    // maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
 }
 
 dependencies {
@@ -18,7 +20,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
     implementation("com.github.ajalt.colormath:colormath:2.1.0")
 
-    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.2.3-SNAPSHOT")
+    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.2.3")
 
     runtimeOnly(npm("webextension-polyfill", "0.8.0"))
     runtimeOnly(npm("jquery", "3.6.0"))
@@ -48,12 +50,12 @@ tasks {
     val tasks = listOf(development, production).associateWith { env ->
         val extensionFolder = "build/extension"
 
-        val browserWebpackTask = getByName("browser${env.capitalize()}Webpack")
+        val browserWebpackTask = getByName("browser${env.capitalize()}Webpack", KotlinWebpack::class)
 
         val copyBundleFile = register<Copy>("copy${env.capitalize()}BundleFile") {
             dependsOn(browserWebpackTask)
-            from("build/distributions") {
-                include("*.js", "*.js.LICENSE.txt")
+            from(browserWebpackTask.destinationDirectory) {
+                include("*.js")
             }
             into("$extensionFolder/js")
         }

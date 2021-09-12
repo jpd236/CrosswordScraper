@@ -43,7 +43,15 @@ object CrosswordNexusSource : FixedHostSource() {
         return scrapeUrls(url, scriptsUrls)
     }
 
-    private suspend fun scrapeUrls(baseUrl: URL, urls: List<String>): ScrapeResult.Success {
+    private suspend fun scrapeUrls(baseUrl: URL, urls: List<String>): ScrapeResult {
+        val absoluteUrls = urls.map { it to URL(it, baseUrl.toString()) }
+
+        // Determine and check all the permissions we'll need to download these puzzles.
+        val neededPermissions = getPermissionsForUrls(absoluteUrls.map { it.second })
+        if (!hasPermissions(neededPermissions)) {
+            return ScrapeResult.NeedPermissions(neededPermissions)
+        }
+
         val fetchedUrls =
             urls.map { it to Http.fetchAsBinary(URL(it, baseUrl.toString()).toString()) }
                 .partition { it.first.endsWith(".jpz") }

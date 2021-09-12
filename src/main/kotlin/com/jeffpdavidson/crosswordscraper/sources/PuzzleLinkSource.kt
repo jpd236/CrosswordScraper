@@ -36,16 +36,7 @@ object PuzzleLinkSource : Source {
             .filter { setOf("http:", "https:").contains(it.protocol) }
 
         // Determine and check all the permissions we'll need to download these puzzles.
-        val neededPermissions = puzzleUrls.flatMap { puzzleUrl ->
-            if (puzzleUrl.protocol == "http:") {
-                // Also request permission for "https:" in case we're redirected there.
-                val alternateUrl = URL(puzzleUrl.toString())
-                alternateUrl.protocol = if (puzzleUrl.protocol == "http:") "https:" else "http:"
-                listOf(puzzleUrl, alternateUrl)
-            } else {
-                listOf(puzzleUrl)
-            }
-        }.map { "${it.origin}/*" }.distinct()
+        val neededPermissions = getPermissionsForUrls(puzzleUrls)
         if (!hasPermissions(neededPermissions)) {
             return ScrapeResult.NeedPermissions(neededPermissions)
         }

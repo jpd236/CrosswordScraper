@@ -32,6 +32,18 @@ interface Source {
     suspend fun hasPermissions(neededPermissions: List<String>): Boolean =
         browser.permissions.contains(Permissions { origins = neededPermissions.toTypedArray() }).await()
 
+    fun getPermissionsForUrls(urls: List<URL>): List<String> =
+        urls.flatMap { url ->
+            if (url.protocol == "http:") {
+                // Also request permission for "https:" in case we're redirected there.
+                val alternateUrl = URL(url.toString())
+                alternateUrl.protocol = if (url.protocol == "http:") "https:" else "http:"
+                listOf(url, alternateUrl)
+            } else {
+                listOf(url)
+            }
+        }.map { "${it.origin}/*" }.distinct()
+
     companion object {
         /** Whether this URL's host is this domain, or a subdomain of this domain. */
         internal fun URL.hostIsDomainOrSubdomainOf(domain: String): Boolean {

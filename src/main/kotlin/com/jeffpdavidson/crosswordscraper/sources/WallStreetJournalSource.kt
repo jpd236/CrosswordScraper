@@ -28,16 +28,16 @@ object WallStreetJournalSource : FixedHostSource() {
         }
         return ScrapeResult.Success(listOf(WallStreetJournal(puzzleJsonString)))
     }
+}
 
-    private interface Meta {
-        val type: String?
-    }
+private external interface Meta {
+    val type: String?
+}
 
-    private interface Data {
-        val meta: Meta
-    }
+private external interface Data {
+    val meta: Meta
+}
 
-    private interface PuzzleJson {
-        val data: Data
-    }
+private external interface PuzzleJson {
+    val data: Data
 }

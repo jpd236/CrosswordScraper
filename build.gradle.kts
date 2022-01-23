@@ -11,7 +11,7 @@ version = "1.2.4"
 repositories {
     mavenCentral()
     // TODO: Remove ahead of public release.
-    // maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
+    maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
 }
 
 dependencies {
@@ -20,7 +20,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
     implementation("com.github.ajalt.colormath:colormath:2.1.0")
 
-    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.2.4")
+    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.2.5-SNAPSHOT")
 
     runtimeOnly(npm("webextension-polyfill", "0.8.0"))
     runtimeOnly(npm("jquery", "3.6.0"))

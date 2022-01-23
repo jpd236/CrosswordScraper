@@ -1,5 +1,6 @@
 package com.jeffpdavidson.crosswordscraper.sources
 
+import com.jeffpdavidson.crosswordscraper.Http
 import com.jeffpdavidson.crosswordscraper.Scraping
 import com.jeffpdavidson.crosswordscraper.sources.Source.Companion.hostIsDomainOrSubdomainOf
 import com.jeffpdavidson.kotwords.formats.NewYorkTimes
@@ -18,8 +19,15 @@ object NewYorkTimesSource : FixedHostSource() {
     override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult {
         val pluribus = Scraping.readGlobalString(frameId, "pluribus")
         if (pluribus.isNotEmpty()) {
+            val nyt = NewYorkTimes.fromPluribus(pluribus, Http::fetchAsBinary)
+            if (nyt.getExtraDataUrls().isNotEmpty()) {
+                val extraDataPermissions = getPermissionsForUrls(nyt.getExtraDataUrls().map { URL(it) })
+                if (!hasPermissions(extraDataPermissions)) {
+                    return ScrapeResult.NeedPermissions(extraDataPermissions)
+                }
+            }
             return ScrapeResult.Success(
-                puzzles = listOf(NewYorkTimes.fromPluribus(pluribus)),
+                puzzles = listOf(nyt),
             )
         }
         val gameData = Scraping.readGlobalString(frameId, "gameData")

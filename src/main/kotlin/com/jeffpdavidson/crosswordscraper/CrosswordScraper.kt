@@ -4,6 +4,7 @@ import browser.permissions.Permissions
 import com.jeffpdavidson.crosswordscraper.sources.AmuseLabsSource
 import com.jeffpdavidson.crosswordscraper.sources.BostonGlobeSource
 import com.jeffpdavidson.crosswordscraper.sources.CrosshareSource
+import com.jeffpdavidson.crosswordscraper.sources.CrosswordCompilerSource
 import com.jeffpdavidson.crosswordscraper.sources.CrosswordNexusSource
 import com.jeffpdavidson.crosswordscraper.sources.NewYorkTimesSource
 import com.jeffpdavidson.crosswordscraper.sources.PuzzleLinkSource
@@ -51,6 +52,7 @@ object CrosswordScraper {
         AmuseLabsSource,
         BostonGlobeSource,
         CrosshareSource,
+        CrosswordCompilerSource,
         CrosswordNexusSource,
         NewYorkTimesSource,
         TheWeekSource,
@@ -146,9 +148,17 @@ object CrosswordScraper {
                                 }
                             }
                             is ScrapeResult.NeedPermissions ->
-                                puzzles.add(
-                                    ProcessedScrapeResult.NeedPermissions(source.sourceName, result.permissions)
-                                )
+                                // Only add permission prompts if none of the previous results contain the same set of
+                                // permission requests.
+                                if (puzzles.none { processedResult ->
+                                        processedResult is ProcessedScrapeResult.NeedPermissions
+                                                && processedResult.permissions.toSet() == result.permissions.toSet()
+                                    }
+                                ) {
+                                    puzzles.add(
+                                        ProcessedScrapeResult.NeedPermissions(source.sourceName, result.permissions)
+                                    )
+                                }
                             is ScrapeResult.Error ->
                                 puzzles.add(ProcessedScrapeResult.Error(source.sourceName))
                         }

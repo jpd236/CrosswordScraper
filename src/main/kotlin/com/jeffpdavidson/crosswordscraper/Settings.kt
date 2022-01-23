@@ -19,11 +19,14 @@ import kotlinx.html.js.label
 import kotlinx.html.js.onChangeFunction
 import kotlinx.html.js.onClickFunction
 import kotlinx.html.js.onInputFunction
+import kotlinx.html.js.option
+import kotlinx.html.js.select
 import kotlinx.html.js.span
 import kotlinx.html.small
 import kotlinx.html.style
 import org.w3c.dom.HTMLDivElement
 import org.w3c.dom.HTMLInputElement
+import org.w3c.dom.HTMLSelectElement
 import org.w3c.dom.HTMLSpanElement
 
 /** Render the settings page and provide access to settings. */
@@ -32,6 +35,7 @@ object Settings {
     private const val ID_PDF_INK_SAVER_PERCENTAGE = "pdf-ink-saver"
     private const val ID_PDF_INK_SAVER_PERCENTAGE_TEXT = "pdf-ink-saver-text"
     private const val ID_PDF_INK_SAVER_PERCENTAGE_SQUARE = "pdf-ink-saver-square"
+    private const val ID_PDF_FONT = "pdf-font"
 
     private val puzUnicodeSupportInput by lazy { document.getElementById(ID_PUZ_UNICODE_SUPPORT) as HTMLInputElement }
     private val pdfInkSaverPercentageInput by lazy {
@@ -43,15 +47,16 @@ object Settings {
     private val pdfInkSaverPercentageSquare by lazy {
         document.getElementById(ID_PDF_INK_SAVER_PERCENTAGE_SQUARE) as HTMLDivElement
     }
+    private val pdfFont by lazy { document.getElementById(ID_PDF_FONT) as HTMLSelectElement }
 
     /** Render the popup page. Intended to be loaded from options.html. */
     suspend fun load() {
         val optionsContainer = document.getElementById("options-container") as HTMLDivElement
         optionsContainer.append {
+            h4 {
+                +"PUZ"
+            }
             div("form-group") {
-                h4 {
-                    +"PUZ"
-                }
                 div("form-check") {
                     input(type = InputType.checkBox, classes = "form-check-input") {
                         id = ID_PUZ_UNICODE_SUPPORT
@@ -69,10 +74,10 @@ object Settings {
                             "(when needed). Files may not work with all applications.")
                 }
             }
+            h4 {
+                +"PDF"
+            }
             div("form-group") {
-                h4 {
-                    +"PDF"
-                }
                 label {
                     htmlFor = ID_PDF_INK_SAVER_PERCENTAGE
                     +"Ink Saver Percentage"
@@ -100,6 +105,28 @@ object Settings {
                     +"Percentage to lighten black squares. 0% is pure black; 100% is pure white."
                 }
             }
+            div("form-group") {
+                label {
+                    htmlFor = ID_PDF_FONT
+                    +"Font"
+                }
+                select("form-control") {
+                    id = ID_PDF_FONT
+                    style = "max-width: 300px;"
+                    option {
+                        value = "NotoSans"
+                        +"Noto Sans"
+                    }
+                    option {
+                        value = "NotoSerif"
+                        +"Noto Serif"
+                    }
+                    onChangeFunction = {
+                        setPdfFont(pdfFont.value)
+                    }
+                }
+
+            }
             button(classes = "btn btn-secondary btn-sm") {
                 +"Reset to defaults"
                 onClickFunction = {
@@ -121,6 +148,7 @@ object Settings {
         puzUnicodeSupportInput.checked = isPuzUnicodeSupportEnabled()
         pdfInkSaverPercentageInput.value = getPdfInkSaverPercentage().toString()
         onInkSaverPercentageInput()
+        pdfFont.value = getPdfFont()
     }
 
     private fun onInkSaverPercentageInput() {
@@ -150,6 +178,17 @@ object Settings {
     private fun setPdfInkSaverPercentage(percentage: Int) {
         val items = js("{}")
         items[ID_PDF_INK_SAVER_PERCENTAGE] = percentage
+        browser.storage.sync.set(items)
+    }
+
+    suspend fun getPdfFont(): String {
+        val items = browser.storage.sync.get(ID_PDF_FONT).await()
+        return items[ID_PDF_FONT] as? String ?: "NotoSerif"
+    }
+
+    private fun setPdfFont(font: String) {
+        val items = js("{}")
+        items[ID_PDF_FONT] = font
         browser.storage.sync.set(items)
     }
 

@@ -8,22 +8,33 @@ import kotlinx.coroutines.sync.withLock
 
 object PdfFonts {
     private val initMutex = Mutex()
-    private var NOTO_FONT_FAMILY: PdfFontFamily? = null
+    private var NOTO_SERIF_FONT_FAMILY: PdfFontFamily? = null
+    private var NOTO_SANS_FONT_FAMILY: PdfFontFamily? = null
 
-    suspend fun getNotoFontFamily(): PdfFontFamily {
+    suspend fun getNotoSerifFontFamily(): PdfFontFamily {
         initMutex.withLock {
-            if (NOTO_FONT_FAMILY == null) {
-                NOTO_FONT_FAMILY = PdfFontFamily(
-                    PdfFont.TtfFont("NotoSerif", "normal", Http.fetchAsBinary(getURL("fonts/NotoSerif-Regular.ttf"))),
-                    PdfFont.TtfFont("NotoSerif", "bold", Http.fetchAsBinary(getURL("fonts/NotoSerif-Bold.ttf"))),
-                    PdfFont.TtfFont("NotoSerif", "italic", Http.fetchAsBinary(getURL("fonts/NotoSerif-Italic.ttf"))),
-                    PdfFont.TtfFont(
-                        "NotoSerif", "bolditalic",
-                        Http.fetchAsBinary(getURL("fonts/NotoSerif-BoldItalic.ttf"))
-                    ),
-                )
+            if (NOTO_SERIF_FONT_FAMILY == null) {
+                NOTO_SERIF_FONT_FAMILY = loadFontFamily("NotoSerif")
             }
         }
-        return NOTO_FONT_FAMILY!!
+        return NOTO_SERIF_FONT_FAMILY!!
+    }
+
+    suspend fun getNotoSansFontFamily(): PdfFontFamily {
+        initMutex.withLock {
+            if (NOTO_SANS_FONT_FAMILY == null) {
+                NOTO_SANS_FONT_FAMILY = loadFontFamily("NotoSans")
+            }
+        }
+        return NOTO_SANS_FONT_FAMILY!!
+    }
+
+    private suspend fun loadFontFamily(name: String): PdfFontFamily {
+        return PdfFontFamily(
+            PdfFont.TtfFont(name, "normal", Http.fetchAsBinary(getURL("fonts/$name-Regular.ttf"))),
+            PdfFont.TtfFont(name, "bold", Http.fetchAsBinary(getURL("fonts/$name-Bold.ttf"))),
+            PdfFont.TtfFont(name, "italic", Http.fetchAsBinary(getURL("fonts/$name-Italic.ttf"))),
+            PdfFont.TtfFont(name, "bolditalic", Http.fetchAsBinary(getURL("fonts/$name-BoldItalic.ttf"))),
+        )
     }
 }

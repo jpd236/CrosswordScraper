@@ -114,7 +114,11 @@ object CrosswordScraper {
 
     private sealed class ProcessedScrapeResult {
         data class Success(val source: String, val puzzle: Puzzle) : ProcessedScrapeResult()
-        data class NeedPermissions(val source: String, val permissions: List<String>) : ProcessedScrapeResult()
+        data class NeedPermissions(
+            val source: String,
+            val permissions: List<String>,
+            val prompt: String,
+        ) : ProcessedScrapeResult()
         data class Error(val source: String) : ProcessedScrapeResult()
     }
 
@@ -156,7 +160,11 @@ object CrosswordScraper {
                                     }
                                 ) {
                                     puzzles.add(
-                                        ProcessedScrapeResult.NeedPermissions(source.sourceName, result.permissions)
+                                        ProcessedScrapeResult.NeedPermissions(
+                                            source.sourceName,
+                                            result.permissions,
+                                            result.prompt,
+                                        )
                                     )
                                 }
                             is ScrapeResult.Error ->
@@ -248,7 +256,7 @@ object CrosswordScraper {
                     origins = scrapedPuzzle.permissions.toTypedArray()
                 }).then { onGrantFn(it) }
             }
-            +"Grant Permission"
+            +scrapedPuzzle.prompt
         }
     }
 

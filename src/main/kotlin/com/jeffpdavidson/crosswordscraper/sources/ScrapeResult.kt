@@ -9,7 +9,7 @@ sealed class ScrapeResult {
     data class Success(val puzzles: List<Puzzleable> = listOf()) : ScrapeResult()
 
     /** Result indicating that the user must grant the given permissions before we can perform the scrape. */
-    data class NeedPermissions(val permissions: List<String>) : ScrapeResult()
+    data class NeedPermissions(val permissions: List<String>, val prompt: String = "Grant permission") : ScrapeResult()
 
     /** Result indicating an error occurred when scraping. */
     object Error : ScrapeResult()

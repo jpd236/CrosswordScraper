@@ -23,7 +23,10 @@ object NewYorkTimesSource : FixedHostSource() {
             if (nyt.getExtraDataUrls().isNotEmpty()) {
                 val extraDataPermissions = getPermissionsForUrls(nyt.getExtraDataUrls().map { URL(it) })
                 if (!hasPermissions(extraDataPermissions)) {
-                    return ScrapeResult.NeedPermissions(extraDataPermissions)
+                    return ScrapeResult.NeedPermissions(
+                        extraDataPermissions,
+                        prompt = "Grant permission (needed to scrape grid graphics)"
+                    )
                 }
             }
             return ScrapeResult.Success(

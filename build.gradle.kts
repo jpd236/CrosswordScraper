@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 plugins {
-    kotlin("js") version "1.5.30"
-    kotlin("plugin.serialization") version "1.5.0"
+    kotlin("js") version "1.6.10"
+    kotlin("plugin.serialization") version "1.6.10"
 }
 
 group = "com.jeffpdavidson"
@@ -15,10 +15,10 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:1.5.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:1.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
-    implementation("com.github.ajalt.colormath:colormath:2.1.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+    implementation("com.github.ajalt.colormath:colormath:3.2.0")
 
     implementation("com.jeffpdavidson.kotwords:kotwords-js:1.2.6-SNAPSHOT")
 

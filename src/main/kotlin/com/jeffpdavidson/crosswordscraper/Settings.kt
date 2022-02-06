@@ -1,6 +1,6 @@
 package com.jeffpdavidson.crosswordscraper
 
-import com.github.ajalt.colormath.RGB
+import com.github.ajalt.colormath.model.RGB
 import com.jeffpdavidson.kotwords.formats.Pdf
 import kotlinx.browser.document
 import kotlinx.coroutines.GlobalScope

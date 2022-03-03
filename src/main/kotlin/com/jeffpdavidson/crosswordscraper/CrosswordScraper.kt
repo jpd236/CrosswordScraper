@@ -1,6 +1,7 @@
 package com.jeffpdavidson.crosswordscraper
 
 import browser.permissions.Permissions
+import browser.tabs.CreateInfo
 import com.jeffpdavidson.crosswordscraper.sources.AmuseLabsSource
 import com.jeffpdavidson.crosswordscraper.sources.BostonGlobeSource
 import com.jeffpdavidson.crosswordscraper.sources.CrosshareSource
@@ -15,6 +16,7 @@ import com.jeffpdavidson.crosswordscraper.sources.WallStreetJournalSource
 import com.jeffpdavidson.crosswordscraper.sources.WorldOfCrosswordsSource
 import com.jeffpdavidson.kotwords.model.Puzzle
 import kotlinx.browser.document
+import kotlinx.browser.window
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.dom.addClass
@@ -40,6 +42,7 @@ import org.w3c.dom.HTMLParagraphElement
 import org.w3c.dom.url.URL
 import org.w3c.files.Blob
 import org.w3c.files.FileReader
+import kotlin.js.Date
 
 /** Core logic of the scraper - render the popup page and perform scraping. */
 object CrosswordScraper {
@@ -66,7 +69,7 @@ object CrosswordScraper {
 
     /** Render the popup page. Intended to be loaded from popup.html. */
     suspend fun load() {
-        val puzzles = scrapePuzzles()
+        val (puzzles, debugLog) = scrapePuzzles()
 
         val puzzleContainer = document.getElementById("puzzle-container") as HTMLDivElement
         puzzleContainer.append {
@@ -105,6 +108,16 @@ object CrosswordScraper {
                     browser.runtime.openOptionsPage()
                 }
             }
+            button(classes = "btn btn-outline-secondary btn-sm mt-3 ml-1") {
+                +"Report issue"
+                onClickFunction = {
+                    startDownload(
+                        "CrosswordScraper-debug-log-${Date(Date.now()).toISOString()}.txt",
+                        debugLog.encodeToByteArray()
+                    )
+                    browser.tabs.create(CreateInfo { url = "https://github.com/jpd236/CrosswordScraper/issues/new" })
+                }
+            }
         }
 
         val loadingContainer = document.getElementById("loading-container") as HTMLDivElement
@@ -123,10 +136,20 @@ object CrosswordScraper {
     }
 
     /** Scrape puzzles from all frames in the user's active tab. */
-    private suspend fun scrapePuzzles(): Set<ProcessedScrapeResult> {
+    private suspend fun scrapePuzzles(): Pair<Set<ProcessedScrapeResult>, String> {
+        val debugLog = StringBuilder()
+        debugLog.appendLine("Crossword Scraper Debug Log")
+        debugLog.appendLine("Please attach this file to any your issue report")
+        debugLog.appendLine("------------------------------------------------")
+        debugLog.appendLine("Generated at: ${Date(Date.now()).toISOString()}")
+        debugLog.appendLine("Browser: ${window.navigator.userAgent}")
+
         val frames = Scraping.getAllFrames()
+        debugLog.appendLine("URL: ${frames.first { it.parentFrameId == -1 }.url}")
+
         val puzzles = mutableSetOf<ProcessedScrapeResult>()
         val processedGrids = mutableListOf<List<List<Puzzle.Cell>>>()
+        debugLog.appendLine("Scraped Puzzles:")
         frames.forEach { frame ->
             val isTopLevel = frame.parentFrameId == -1
             SOURCES.forEach { source ->
@@ -141,6 +164,15 @@ object CrosswordScraper {
                                         if (!isDuplicate(processedGrids, puzzle.grid)) {
                                             puzzles.add(ProcessedScrapeResult.Success(source.sourceName, puzzle))
                                             processedGrids.add(puzzle.grid)
+                                            debugLog.appendLine(
+                                                "Successful scrape: source = ${source.sourceName}, " +
+                                                        "puzzle title = ${puzzle.title}"
+                                            )
+                                        } else {
+                                            debugLog.appendLine(
+                                                "Duplicate grid: source = ${source.sourceName}, " +
+                                                        "puzzle title = ${puzzle.title}"
+                                            )
                                         }
                                     } catch (t: Throwable) {
                                         console.error(
@@ -148,6 +180,10 @@ object CrosswordScraper {
                                             t.stackTraceToString()
                                         )
                                         puzzles.add(ProcessedScrapeResult.Error(source.sourceName))
+                                        debugLog.appendLine("Scrape exception: source = ${source.sourceName}")
+                                        debugLog.appendLine("-------")
+                                        debugLog.append(t.stackTraceToString())
+                                        debugLog.appendLine("-------")
                                     }
                                 }
                             }
@@ -166,18 +202,34 @@ object CrosswordScraper {
                                             result.prompt,
                                         )
                                     )
+                                    debugLog.appendLine(
+                                        "Need permission: source = ${source.sourceName}, " +
+                                                "permissions = ${result.permissions}, prompt = ${result.prompt}"
+                                    )
+                                } else {
+                                    debugLog.appendLine(
+                                        "Need permissions: source = ${source.sourceName}, already covered"
+                                    )
                                 }
-                            is ScrapeResult.Error ->
+                            is ScrapeResult.Error -> {
                                 puzzles.add(ProcessedScrapeResult.Error(source.sourceName))
+                                debugLog.appendLine(
+                                    "Scrape error: source = ${source.sourceName}, error = ${result.debugMsg}"
+                                )
+                            }
                         }
                     } catch (t: Throwable) {
                         console.error("Error scraping puzzles for source ${source.sourceName}", t.stackTraceToString())
                         puzzles.add(ProcessedScrapeResult.Error(source.sourceName))
+                        debugLog.appendLine("Source scrape error, source = ${source.sourceName}")
+                        debugLog.appendLine("-------")
+                        debugLog.append(t.stackTraceToString())
+                        debugLog.appendLine("-------")
                     }
                 }
             }
         }
-        return puzzles
+        return puzzles to debugLog.toString()
     }
 
     private fun HtmlBlockTag.renderScrapeSuccess(scrapedPuzzle: ProcessedScrapeResult.Success) {

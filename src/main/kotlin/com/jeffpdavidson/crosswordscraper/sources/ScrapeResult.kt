@@ -12,5 +12,5 @@ sealed class ScrapeResult {
     data class NeedPermissions(val permissions: List<String>, val prompt: String = "Grant permission") : ScrapeResult()
 
     /** Result indicating an error occurred when scraping. */
-    object Error : ScrapeResult()
+    data class Error(val debugMsg: String) : ScrapeResult()
 }

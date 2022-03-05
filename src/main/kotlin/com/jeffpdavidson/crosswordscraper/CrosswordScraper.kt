@@ -1,7 +1,6 @@
 package com.jeffpdavidson.crosswordscraper
 
 import browser.permissions.Permissions
-import browser.tabs.CreateInfo
 import com.jeffpdavidson.crosswordscraper.sources.AmuseLabsSource
 import com.jeffpdavidson.crosswordscraper.sources.BostonGlobeSource
 import com.jeffpdavidson.crosswordscraper.sources.CrosshareSource
@@ -25,15 +24,18 @@ import kotlinx.dom.removeClass
 import kotlinx.html.ButtonType
 import kotlinx.html.HtmlBlockTag
 import kotlinx.html.a
+import kotlinx.html.br
 import kotlinx.html.classes
 import kotlinx.html.div
 import kotlinx.html.dom.append
 import kotlinx.html.id
 import kotlinx.html.js.button
+import kotlinx.html.js.hr
 import kotlinx.html.js.li
 import kotlinx.html.js.onClickFunction
 import kotlinx.html.js.p
 import kotlinx.html.js.ul
+import kotlinx.html.style
 import kotlinx.html.tabIndex
 import org.khronos.webgl.Int8Array
 import org.w3c.dom.HTMLAnchorElement
@@ -108,14 +110,26 @@ object CrosswordScraper {
                     browser.runtime.openOptionsPage()
                 }
             }
-            button(classes = "btn btn-outline-secondary btn-sm mt-3 ml-1") {
-                +"Report issue"
-                onClickFunction = {
-                    startDownload(
-                        "CrosswordScraper-debug-log-${Date(Date.now()).toISOString()}.txt",
-                        debugLog.encodeToByteArray()
-                    )
-                    browser.tabs.create(CreateInfo { url = "https://github.com/jpd236/CrosswordScraper/issues/new" })
+            hr { }
+            div(classes = "text-muted") {
+                style = "font-size: 0.7rem"
+                +"Version: ${browser.runtime.getManifest().version}"
+                br { }
+                a {
+                    href = "https://github.com/jpd236/CrosswordScraper/issues/new"
+                    target = "_blank"
+                    +"Report issue"
+                }
+                + " | "
+                a {
+                    href = "#"
+                    onClickFunction = {
+                        startDownload(
+                            "CrosswordScraper-debug-log-${Date(Date.now()).toISOString()}.txt",
+                            debugLog.encodeToByteArray()
+                        )
+                    }
+                    +"Save debug log"
                 }
             }
         }
@@ -143,6 +157,7 @@ object CrosswordScraper {
         debugLog.appendLine("Please attach this file to any your issue report")
         debugLog.appendLine("------------------------------------------------")
         debugLog.appendLine("Generated at: ${Date(Date.now()).toISOString()}")
+        debugLog.appendLine("Extension version: ${browser.runtime.getManifest().version}")
         debugLog.appendLine("Browser: ${window.navigator.userAgent}")
 
         val frames = Scraping.getAllFrames()

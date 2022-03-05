@@ -42,18 +42,21 @@ object NewYorkTimesSource : FixedHostSource() {
         if (gameDataString.isNotEmpty()) {
             val gameData = JSON.parse<GameDataJson>(gameDataString)
             if (gameData.filename?.isNotEmpty() == true) {
+                val puzzleJsonUrl =
+                    "https://nyt-games-prd.appspot.com/svc/crosswords/v6/puzzle/${gameData.filename}.json"
+
+                // Need permission to access NYT cookies and API.
+                val neededPermissions = neededHostPermissions + getPermissionsForUrls(listOf(URL(puzzleJsonUrl)))
+                if (!hasPermissions(neededPermissions)) {
+                    return ScrapeResult.NeedPermissions(neededPermissions)
+                }
+
                 // Obtain the NYT-S cookie for the current URL so we can use it in the API request.
                 val nytSCookie = browser.cookies.get(Details {
                     name = "NYT-S"
                     this@Details.url = url.toString()
                 }).await()
                 if (nytSCookie.value.isNotEmpty()) {
-                    val puzzleJsonUrl =
-                        "https://nyt-games-prd.appspot.com/svc/crosswords/v6/puzzle/${gameData.filename}.json"
-                    val permissions = getPermissionsForUrls(listOf(URL(puzzleJsonUrl)))
-                    if (!hasPermissions(permissions)) {
-                        return ScrapeResult.NeedPermissions(permissions)
-                    }
                     val puzzleJson = Http.fetchAsString(puzzleJsonUrl, listOf("nyt-s" to nytSCookie.value))
                     return getNewYorkTimesScrapeResult(
                         NewYorkTimes.fromApiJson(puzzleJson, gameData.stream ?: "daily", Http::fetchAsBinary)

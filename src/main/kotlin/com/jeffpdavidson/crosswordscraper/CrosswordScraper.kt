@@ -132,6 +132,7 @@ object CrosswordScraper {
             val permissions: List<String>,
             val prompt: String,
         ) : ProcessedScrapeResult()
+
         data class Error(val source: String) : ProcessedScrapeResult()
     }
 

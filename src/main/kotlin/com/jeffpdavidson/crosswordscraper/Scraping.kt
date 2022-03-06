@@ -71,9 +71,9 @@ object Scraping {
             divElem.style.display = 'none';
             document.body.appendChild(divElem);
             var scriptElem = document.createElement('script');
-            scriptElem.innerHTML = 'document.getElementById("$divName").innerText = $command;';
+            scriptElem.innerHTML = 'document.getElementById("$divName").textContent = $command;';
             document.body.appendChild(scriptElem);
-            var data = divElem.innerText;
+            var data = divElem.textContent;
             document.body.removeChild(scriptElem);
             document.body.removeChild(divElem);
             data;

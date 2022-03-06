@@ -17,6 +17,11 @@ object WorldOfCrosswordsSource : FixedHostSource() {
     }
 
     override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult {
+        // We do an unconditional HTTP fetch, so we always need permissions, even in the top-level frame.
+        if (!hasPermissions(neededHostPermissions)) {
+            return ScrapeResult.NeedPermissions(neededHostPermissions)
+        }
+
         // Map /, /index.php -> /getEmptyPuzzle.php
         val emptyPuzzleUrl = URL(url.toString())
         emptyPuzzleUrl.pathname = url.pathname.replace("/(?:index\\.php)?".toRegex(), "/getEmptyPuzzle.php")

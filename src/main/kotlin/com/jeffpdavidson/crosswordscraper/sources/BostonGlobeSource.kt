@@ -14,8 +14,9 @@ object BostonGlobeSource : FixedHostSource() {
         return url.hostIsDomainOrSubdomainOf("bostonglobe.com") && url.pathname.startsWith("/games-comics/crossword")
     }
 
-    override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult {
-        val html = Scraping.readGlobalString(frameId, "document.body.outerHTML")
+    override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult {
+        val scrapeFn = js("function() { return document.body.outerHTML; }")
+        val html = Scraping.executeFunctionForString(tabId, frameId, scrapeFn)
         return ScrapeResult.Success(listOf(BostonGlobe(html)))
     }
 }

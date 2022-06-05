@@ -15,7 +15,7 @@ object CrosswordCompilerSource : Source {
         "www.brendanemmettquigley.com"
     )
 
-    override suspend fun scrapePuzzles(url: URL, frameId: Int, isTopLevel: Boolean): ScrapeResult {
+    override suspend fun scrapePuzzles(url: URL, tabId: Int, frameId: Int, isTopLevel: Boolean): ScrapeResult {
         // We can't access the frame contents of internal frames without requesting permissions up front, so check
         // against a list of known hosts which may have iframes containing CrosswordCompiler applets. Otherwise, we
         // just assume no applet is present to avoid asking for permissions on every page.
@@ -30,7 +30,8 @@ object CrosswordCompilerSource : Source {
             }
         }
 
-        val puzzleData = Scraping.readGlobalString(frameId, "CrosswordPuzzleData")
+        val scrapeFn = js("function() { return window.CrosswordPuzzleData ? window.CrosswordPuzzleData : ''; }")
+        val puzzleData = Scraping.executeFunctionForString(tabId, frameId, scrapeFn)
         if (puzzleData.isEmpty()) {
             return ScrapeResult.Success(listOf())
         }

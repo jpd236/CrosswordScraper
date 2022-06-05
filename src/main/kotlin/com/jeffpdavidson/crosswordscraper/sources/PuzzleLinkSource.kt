@@ -14,7 +14,7 @@ object PuzzleLinkSource : Source {
 
     override fun matchesUrl(url: URL): Boolean = url.protocol == "http:" || url.protocol == "https:"
 
-    override suspend fun scrapePuzzles(url: URL, frameId: Int, isTopLevel: Boolean): ScrapeResult {
+    override suspend fun scrapePuzzles(url: URL, tabId: Int, frameId: Int, isTopLevel: Boolean): ScrapeResult {
         // We can't access the frame contents of internal frames without requesting permissions up front, so just assume
         // there are no iframes with .puz links inside.
         if (!isTopLevel) {
@@ -22,14 +22,16 @@ object PuzzleLinkSource : Source {
         }
 
         // Find all .puz links on the page.
-        val getUrlsCommand = """
-            JSON.stringify(
-                Array.from(
-                    window.document.querySelectorAll(\'a[href\$=".puz"]\').values()
-                ).map(elem => elem.href)
-            )
-        """.replace("\n", "")
-        val puzzleUrlsJson = Scraping.executeCommandForString(frameId, getUrlsCommand)
+        val getUrlsCommand = js(
+            """function() {
+                return JSON.stringify(
+                    Array.from(
+                        window.document.querySelectorAll('a[href$=".puz"]').values()
+                    ).map(function(elem) { return elem.href; })
+                );
+            }"""
+        )
+        val puzzleUrlsJson = Scraping.executeFunctionForString(tabId, frameId, getUrlsCommand)
         val puzzleUrls = Json.decodeFromString(ListSerializer(String.serializer()), puzzleUrlsJson)
             .distinct()
             .map { URL(it) }

@@ -15,8 +15,13 @@ object WallStreetJournalSource : FixedHostSource() {
                 && url.pathname.startsWith("/puzzles/crossword/")
     }
 
-    override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult {
-        val puzzleJsonString = Scraping.readGlobalJson(frameId, "oApp.puzzle.JSON")
+    override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult {
+        val scrapeFn = js(
+            """function() {
+                return window.oApp.puzzle.JSON ? JSON.stringify(window.oApp.puzzle.JSON) : '';
+            }"""
+        )
+        val puzzleJsonString = Scraping.executeFunctionForString(tabId, frameId, scrapeFn)
         if (puzzleJsonString.isEmpty()) {
             return ScrapeResult.Success()
         }

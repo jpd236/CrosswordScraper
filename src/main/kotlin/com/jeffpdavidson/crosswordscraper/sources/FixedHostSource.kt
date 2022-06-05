@@ -20,13 +20,13 @@ abstract class FixedHostSource : Source {
     /** Host permissions needed to access puzzles for this source when embedded in a frame. */
     abstract val neededHostPermissions: List<String>
 
-    abstract suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult
+    abstract suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult
 
-    final override suspend fun scrapePuzzles(url: URL, frameId: Int, isTopLevel: Boolean): ScrapeResult {
+    final override suspend fun scrapePuzzles(url: URL, tabId: Int, frameId: Int, isTopLevel: Boolean): ScrapeResult {
         if (!isTopLevel && !hasPermissions(neededHostPermissions)) {
             return ScrapeResult.NeedPermissions(neededHostPermissions)
         }
 
-        return scrapePuzzlesWithPermissionGranted(url, frameId)
+        return scrapePuzzlesWithPermissionGranted(url, tabId, frameId)
     }
 }

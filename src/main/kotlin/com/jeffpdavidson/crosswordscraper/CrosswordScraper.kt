@@ -114,13 +114,17 @@ object CrosswordScraper {
             div(classes = "text-muted") {
                 style = "font-size: 0.7rem"
                 +"Version: ${browser.runtime.getManifest().version}"
+                // TODO(#4): Delete this once Manifest v3 is being shipped.
+                if (browser.runtime.getManifest().manifest_version == 3) {
+                    +" (Manifest v3)"
+                }
                 br { }
                 a {
                     href = "https://github.com/jpd236/CrosswordScraper/issues/new"
                     target = "_blank"
                     +"Report issue"
                 }
-                + " | "
+                +" | "
                 a {
                     href = "#"
                     onClickFunction = {
@@ -160,7 +164,7 @@ object CrosswordScraper {
         debugLog.appendLine("Extension version: ${browser.runtime.getManifest().version}")
         debugLog.appendLine("Browser: ${window.navigator.userAgent}")
 
-        val frames = Scraping.getAllFrames()
+        val (tabId, frames) = Scraping.getAllFrames()
         debugLog.appendLine("URL: ${frames.first { it.parentFrameId == -1 }.url}")
 
         val puzzles = mutableSetOf<ProcessedScrapeResult>()
@@ -172,7 +176,7 @@ object CrosswordScraper {
                 val url = URL(frame.url)
                 if (source.matchesUrl(url)) {
                     try {
-                        when (val result = source.scrapePuzzles(url, frame.frameId, isTopLevel)) {
+                        when (val result = source.scrapePuzzles(url, tabId, frame.frameId, isTopLevel)) {
                             is ScrapeResult.Success -> {
                                 result.puzzles.forEach { puzzleable ->
                                     try {

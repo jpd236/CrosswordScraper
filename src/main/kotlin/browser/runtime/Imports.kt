@@ -9,5 +9,6 @@ external fun openOptionsPage(): Promise<Unit>
 external fun getManifest(): Manifest
 
 external interface Manifest {
+    var manifest_version: Int
     var version: String
 }

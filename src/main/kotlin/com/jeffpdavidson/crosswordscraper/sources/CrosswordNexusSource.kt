@@ -19,7 +19,7 @@ object CrosswordNexusSource : FixedHostSource() {
 
     private val PUZZLE_URL_REGEX = "url: '([^']*.)'".toRegex()
 
-    override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult {
+    override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult {
         // First, see if there's a puzzle URL in one of the query parameters.
         val paramUrls = url.searchParams.values().filter { it.endsWith(".jpz") || it.endsWith(".puz") }
         if (paramUrls.isNotEmpty()) {
@@ -27,14 +27,16 @@ object CrosswordNexusSource : FixedHostSource() {
         }
 
         // Otherwise, look for initialization scripts which include a puzzle URL.
-        val getScriptsCommand = """
-            JSON.stringify(
-                Array.from(
-                    window.document.getElementsByTagName(\'script\')
-                ).map(elem => elem.innerText)
-            )
-        """.replace("\n", "")
-        val scriptsJson = Scraping.executeCommandForString(frameId, getScriptsCommand)
+        val getScriptsFunction = js(
+            """function() {
+                return JSON.stringify(
+                    Array.from(
+                        window.document.getElementsByTagName('script')
+                    ).map(function(elem) { return elem.innerText; })
+                );
+            }"""
+        )
+        val scriptsJson = Scraping.executeFunctionForString(tabId, frameId, getScriptsFunction)
         val scriptsUrls = Json.decodeFromString(ListSerializer(String.serializer()), scriptsJson)
             .mapNotNull {
                 val matchResult = PUZZLE_URL_REGEX.find(it)

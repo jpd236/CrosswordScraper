@@ -26,7 +26,7 @@ interface Source {
      * If host permissions are needed, return a [ScrapeResult.NeedPermissions] indicating which permissions are
      * necessary.
      */
-    suspend fun scrapePuzzles(url: URL, frameId: Int, isTopLevel: Boolean): ScrapeResult
+    suspend fun scrapePuzzles(url: URL, tabId: Int, frameId: Int, isTopLevel: Boolean): ScrapeResult
 
     /** Whether the given permissions have been granted. */
     suspend fun hasPermissions(neededPermissions: List<String>): Boolean =

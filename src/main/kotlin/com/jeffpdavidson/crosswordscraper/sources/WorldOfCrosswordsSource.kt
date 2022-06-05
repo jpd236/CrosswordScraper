@@ -16,7 +16,7 @@ object WorldOfCrosswordsSource : FixedHostSource() {
                 && (url.pathname == "/" || url.pathname == "/index.php")
     }
 
-    override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult {
+    override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult {
         // We do an unconditional HTTP fetch, so we always need permissions, even in the top-level frame.
         if (!hasPermissions(neededHostPermissions)) {
             return ScrapeResult.NeedPermissions(neededHostPermissions)

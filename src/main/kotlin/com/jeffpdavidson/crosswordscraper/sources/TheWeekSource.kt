@@ -14,11 +14,12 @@ object TheWeekSource : FixedHostSource() {
         return url.host == "theweek.com"
     }
 
-    override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult {
+    override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult {
         // Note: parsed puzzle data is stored in PUZAPP.puz. But given that we have a direct .puz URL available, and
         // that the puzzle is read directly from that .puz URL, there's little reason to scrape from that format rather
         // than just redownloading the same .puz file.
-        val puzzleUrl = Scraping.readGlobalJson(frameId, "xrPuzUrl")
+        val scrapeFn = js("function() { return window.xrPuzUrl ? JSON.stringify(window.xrPuzUrl) : ''; }")
+        val puzzleUrl = Scraping.executeFunctionForString(tabId, frameId, scrapeFn)
         if (puzzleUrl.isNotEmpty()) {
             if (!hasPermissions(neededHostPermissions)) {
                 return ScrapeResult.NeedPermissions(neededHostPermissions)

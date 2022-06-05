@@ -20,10 +20,11 @@ object NewYorkTimesSource : FixedHostSource() {
         return url.hostIsDomainOrSubdomainOf("nytimes.com")
     }
 
-    override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult {
+    override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult {
         // Acrostic puzzles - puzzle data is embedded in gameData.
         if (url.pathname.contains("/acrostic/")) {
-            val gameData = Scraping.readGlobalString(frameId, "gameData")
+            val gameDataFn = js("function() { return window.gameData ? window.gameData : ''; }")
+            val gameData = Scraping.executeFunctionForString(tabId, frameId, gameDataFn)
             return if (gameData.isNotEmpty()) {
                 ScrapeResult.Success(puzzles = listOf(NewYorkTimesAcrostic.fromGameData(gameData)))
             } else {
@@ -33,13 +34,14 @@ object NewYorkTimesSource : FixedHostSource() {
 
         // Otherwise, assume this is a regular crossword.
         // First, try searching for embedded puzzle data in the pluribus variable.
-        val pluribus = Scraping.readGlobalString(frameId, "pluribus")
+        val pluribusFn = js("function() { return window.pluribus ? window.pluribus : ''; }")
+        val pluribus = Scraping.executeFunctionForString(tabId, frameId, pluribusFn)
         if (pluribus.isNotEmpty()) {
             return getNewYorkTimesScrapeResult(NewYorkTimes.fromPluribus(pluribus, Http::fetchAsBinary))
         }
 
         // Otherwise, figure out the type and date so we can make a call to the NYT API.
-        val (filename, stream) = getJsonFilenameAndStream(frameId, url) ?: ("" to "")
+        val (filename, stream) = getJsonFilenameAndStream(tabId, frameId, url) ?: ("" to "")
         if (filename.isNotEmpty()) {
             // For simplicity, request permissions to both the main site and the API site, even though we might only
             // need them for the main site.
@@ -74,9 +76,10 @@ object NewYorkTimesSource : FixedHostSource() {
         return ScrapeResult.Success(listOf())
     }
 
-    private suspend fun getJsonFilenameAndStream(frameId: Int, url: URL): Pair<String, String>? {
+    private suspend fun getJsonFilenameAndStream(tabId: Int, frameId: Int, url: URL): Pair<String, String>? {
         // First, inspect the embedded gameData variable, which may contain the data.
-        val gameDataString = Scraping.readGlobalJson(frameId, "gameData")
+        val gameDataFn = js("function() { return window.gameData ? JSON.stringify(window.gameData) : ''; }")
+        val gameDataString = Scraping.executeFunctionForString(tabId, frameId, gameDataFn)
         if (gameDataString.isNotEmpty()) {
             val gameData = JSON.parse<GameDataJson>(gameDataString)
             if (gameData.filename?.isNotEmpty() == true) {

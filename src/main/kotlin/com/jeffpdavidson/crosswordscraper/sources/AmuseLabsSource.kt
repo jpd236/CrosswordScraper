@@ -14,8 +14,9 @@ object AmuseLabsSource : FixedHostSource() {
         return url.hostIsDomainOrSubdomainOf("amuselabs.com")
     }
 
-    override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult {
-        val puzzleRawc = Scraping.readGlobalString(frameId, "rawc")
+    override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult {
+        val scrapeFn = js("function() { return window.rawc ? window.rawc : ''; }")
+        val puzzleRawc = Scraping.executeFunctionForString(tabId, frameId, scrapeFn)
         if (puzzleRawc.isNotEmpty()) {
             return ScrapeResult.Success(listOf(PuzzleMe.fromRawc(puzzleRawc)))
         }

@@ -10,8 +10,10 @@ Browser extension which downloads crosswords from crossword applets for offline 
 ## Development
 Crossword Scraper is built on Kotlin/JS. To build and run the extension locally, run:
 
-`./gradlew developmentExtension`
+`./gradlew developmentV2Extension`
 
-then install the extension from the `build/extension` directory.
+then install the extension from the `build/extension/developmentV2` directory.
+
+Replace "V2" with "V3" for Manifest v3 support.
 
 Most of the actual puzzle format conversion uses the [kotwords](https://github.com/jpd236/kotwords) library.

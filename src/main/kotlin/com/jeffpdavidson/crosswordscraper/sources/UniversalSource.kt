@@ -13,8 +13,13 @@ object UniversalSource : FixedHostSource() {
         return url.host == "embed.universaluclick.com"
     }
 
-    override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult {
-        val puzzleJson = Scraping.readGlobalJson(frameId, "crossword.jsonData")
+    override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult {
+        val scrapeFn = js(
+            """function() {
+                return window.crossword.jsonData ? JSON.stringify(window.crossword.jsonData) : '';
+            }"""
+        )
+        val puzzleJson = Scraping.executeFunctionForString(tabId, frameId, scrapeFn)
         if (puzzleJson.isNotEmpty()) {
             return ScrapeResult.Success(listOf(UclickJson(puzzleJson)))
         }

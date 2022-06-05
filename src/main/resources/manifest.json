@@ -1,12 +1,12 @@
 {
-  "manifest_version": 2,
+  "manifest_version": {MANIFEST_VERSION},
   "name": "Crossword Scraper",
   "description": "Download .puz, .jpz, or .pdf files from crossword applets for offline solving.",
   "version": "1.2.12",
   "icons": {
     "128": "128.png"
   },
-  "browser_action": {
+  "{ACTION_KEY}": {
     "default_icon": "48.png",
     "default_popup": "popup.html"
   },
@@ -19,12 +19,14 @@
     "cookies",
     "storage",
     "webNavigation"
+    {PERMISSIONS}
   ],
-  "optional_permissions": [
+  "{OPTIONAL_HOST_PERMISSION_KEY}": [
     "http://*/",
     "https://*/"
   ],
   "web_accessible_resources": [
-    "fonts/*.ttf"
-  ]
+    {WEB_ACCESSIBLE_RESOURCES}
+  ],
+  "minimum_chrome_version": "{MINIMUM_CHROME_VERSION}"
 }

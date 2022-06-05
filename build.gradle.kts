@@ -90,9 +90,6 @@ tasks {
                         .replace("{PERMISSIONS}", "")
                         .replace("{OPTIONAL_HOST_PERMISSION_KEY}", "optional_permissions")
                         .replace("{MINIMUM_CHROME_VERSION}", "42")
-                        .replace("{WEB_ACCESSIBLE_RESOURCES}", """
-                            "fonts/*.ttf"
-                        """.trimIndent())
                 }
                 v3 -> filter { line ->
                     line.replace("{MANIFEST_VERSION}", "3")
@@ -100,13 +97,6 @@ tasks {
                         .replace("{PERMISSIONS}", ",\"scripting\"")
                         .replace("{OPTIONAL_HOST_PERMISSION_KEY}", "optional_host_permissions")
                         .replace("{MINIMUM_CHROME_VERSION}", "102")
-                        // TODO(#4): Restrict font access to just this extension.
-                        .replace("{WEB_ACCESSIBLE_RESOURCES}", """
-                            {
-                              "resources": ["fonts/*.ttf"],
-                              "matches": ["<all_urls>"]
-                            }
-                        """.trimIndent())
                 }
             }
         }

@@ -30,7 +30,7 @@ object CrosswordCompilerSource : Source {
             }
         }
 
-        val puzzleData = Scraping.readGlobalString(frameId, "CrosswordPuzzleData")
+        val puzzleData = "" // Scraping.readGlobalString(frameId, "CrosswordPuzzleData")
         if (puzzleData.isEmpty()) {
             return ScrapeResult.Success(listOf())
         }

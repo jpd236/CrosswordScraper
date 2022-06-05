@@ -22,14 +22,7 @@ object PuzzleLinkSource : Source {
         }
 
         // Find all .puz links on the page.
-        val getUrlsCommand = """
-            JSON.stringify(
-                Array.from(
-                    window.document.querySelectorAll(\'a[href\$=".puz"]\').values()
-                ).map(elem => elem.href)
-            )
-        """.replace("\n", "")
-        val puzzleUrlsJson = Scraping.executeCommandForString(frameId, getUrlsCommand)
+        val puzzleUrlsJson = Scraping.executeScriptForString(frameId, "puzzlelink")
         val puzzleUrls = Json.decodeFromString(ListSerializer(String.serializer()), puzzleUrlsJson)
             .distinct()
             .map { URL(it) }

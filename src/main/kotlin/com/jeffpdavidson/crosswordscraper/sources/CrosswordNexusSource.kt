@@ -34,7 +34,7 @@ object CrosswordNexusSource : FixedHostSource() {
                 ).map(elem => elem.innerText)
             )
         """.replace("\n", "")
-        val scriptsJson = Scraping.executeCommandForString(frameId, getScriptsCommand)
+        val scriptsJson = "" // Scraping.executeCommandForString(frameId, getScriptsCommand)
         val scriptsUrls = Json.decodeFromString(ListSerializer(String.serializer()), scriptsJson)
             .mapNotNull {
                 val matchResult = PUZZLE_URL_REGEX.find(it)

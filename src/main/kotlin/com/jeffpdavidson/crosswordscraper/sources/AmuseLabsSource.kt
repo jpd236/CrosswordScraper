@@ -15,7 +15,7 @@ object AmuseLabsSource : FixedHostSource() {
     }
 
     override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult {
-        val puzzleRawc = Scraping.readGlobalString(frameId, "rawc")
+        val puzzleRawc = "" // Scraping.readGlobalString(frameId, "rawc")
         if (puzzleRawc.isNotEmpty()) {
             return ScrapeResult.Success(listOf(PuzzleMe.fromRawc(puzzleRawc)))
         }

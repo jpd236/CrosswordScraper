@@ -16,7 +16,7 @@ object WallStreetJournalSource : FixedHostSource() {
     }
 
     override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult {
-        val puzzleJsonString = Scraping.readGlobalJson(frameId, "oApp.puzzle.JSON")
+        val puzzleJsonString = "" // Scraping.readGlobalJson(frameId, "oApp.puzzle.JSON")
         if (puzzleJsonString.isEmpty()) {
             return ScrapeResult.Success()
         }

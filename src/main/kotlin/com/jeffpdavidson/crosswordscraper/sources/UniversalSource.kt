@@ -14,7 +14,7 @@ object UniversalSource : FixedHostSource() {
     }
 
     override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult {
-        val puzzleJson = Scraping.readGlobalJson(frameId, "crossword.jsonData")
+        val puzzleJson = "" // Scraping.readGlobalJson(frameId, "crossword.jsonData")
         if (puzzleJson.isNotEmpty()) {
             return ScrapeResult.Success(listOf(UclickJson(puzzleJson)))
         }

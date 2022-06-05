@@ -1,9 +1,10 @@
 package com.jeffpdavidson.crosswordscraper
 
-import browser.tabs.ExecuteScriptDetails
 import browser.tabs.QueryInfo
 import browser.webNavigation.Frame
 import browser.webNavigation.GetAllFramesDetails
+import chrome.scripting.InjectionTarget
+import chrome.scripting.ScriptInjection
 import kotlinx.coroutines.await
 
 /** Utilities for scraping content from the user's active tab. */
@@ -25,67 +26,29 @@ object Scraping {
     }
 
     /**
-     * Read a global Javascript string variable from a frame.
-     *
-     * The extension must hold the host permission corresponding to the frame's URL.
-     *
-     * @param frameId ID of the frame to pull the global variable from
-     * @param varName name of the global variable, e.g. document.title
-     * @return the value of the variable, or the empty string if the variable is undefined
-     */
-    suspend fun readGlobalString(frameId: Int, varName: String): String {
-        return executeCommandForString(frameId, "window.$varName === undefined ? \"\" : window.$varName")
-    }
-
-    /**
-     * Read a global Javascript JSON variable from a frame.
-     *
-     * The extension must hold the host permission corresponding to the frame's URL.
-     *
-     * @param frameId ID of the frame to pull the global variable from
-     * @param varName name of the global variable, e.g. document.title
-     * @return the value of the variable as a JSON string, or the empty string if the variable is undefined
-     */
-    suspend fun readGlobalJson(frameId: Int, varName: String): String =
-        executeCommandForString(frameId, "window.$varName === undefined ? \"\" : JSON.stringify(window.$varName)")
-
-    /**
      * Obtain the output of a Javascript command run inside a frame which returns a string.
      *
      * The extension must hold the host permission corresponding to the frame's URL.
      *
      * @param frameId ID of the frame to pull the global variable from
-     * @param command the command to run. Should always return a string. Single quotes must be escaped.
+     * @param script the script to run from resources/contentScripts
      * @return the result of the command, or the empty string if the variable is undefined
      */
-    suspend fun executeCommandForString(frameId: Int, command: String): String {
-        // The popup runs in an isolated context from the scraped frame, so we first need to inject a script to access
-        // the frame. In addition, since the script runs in an isolated context, it can only access the DOM and not any
-        // variables (see https://developer.chrome.com/docs/extensions/mv3/content_scripts/). So we inject a script into
-        // the DOM which inserts a hidden div with the value of the given command, and then read the div's contents from
-        // the DOM.
-        val divName = "CrosswordScraper-Command"
-        val script = """
-            var divElem = document.createElement('div');
-            divElem.setAttribute('id', '$divName');
-            divElem.style.display = 'none';
-            document.body.appendChild(divElem);
-            var scriptElem = document.createElement('script');
-            scriptElem.innerHTML = 'document.getElementById("$divName").textContent = $command;';
-            document.body.appendChild(scriptElem);
-            var data = divElem.textContent;
-            document.body.removeChild(scriptElem);
-            document.body.removeChild(divElem);
-            data;
-        """.trimIndent()
-        return browser.tabs.executeScript(
-            details = ExecuteScriptDetails {
-                this.frameId = frameId
-                code = script
+    suspend fun executeScriptForString(frameId: Int, script: String): String {
+        // TODO: propagate this down
+        val tabId = browser.tabs.query(QueryInfo { active = true; currentWindow = true }).await()[0].id
+        val injection = ScriptInjection {
+            target = InjectionTarget {
+                this.tabId = tabId!!
+                frameIds = arrayOf(frameId)
             }
-        ).then {
-            it[0] as String
+            files = arrayOf("contentScripts/$script.js")
+        }
+        return chrome.scripting.executeScript(injection).then {
+            it[0].result as String
         }.catch<String> { t ->
+            console.log(t)
+            // TODO: Is this still true of the new method?
             // When browser.tabs.executeScript returns a rejected Promise, it passes a plain object with a message, not
             // an Error. This means that "t" isn't actually a Throwable, despite the compile-time type, and if we call
             // await() directly, it won't actually throw a catchable Throwable, but will just abort execution and dump

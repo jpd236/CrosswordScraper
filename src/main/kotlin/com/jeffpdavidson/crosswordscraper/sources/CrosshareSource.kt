@@ -23,14 +23,14 @@ object CrosshareSource : FixedHostSource() {
         // First, try to scrape from the __NEXT_DATA__ JSON on the current page. This works for direct links to
         // Crosshare puzzles, but may contain other data if the user navigated to this page from another Crosshare
         // page.
-        val puzzleJson = Scraping.readGlobalJson(frameId, "__NEXT_DATA__")
+        val puzzleJson = Scraping.executeScriptForString(frameId, "crosshare")
         if (puzzleJson.isNotEmpty()) {
             try {
                 val crosshare = Crosshare(puzzleJson)
                 val puzzle = crosshare.asPuzzle()
                 // Make sure the puzzle title matches the page title - otherwise, this data is probably for a different
                 // puzzle.
-                val pageTitle = Scraping.readGlobalString(frameId, "document.title")
+                val pageTitle = Scraping.executeScriptForString(frameId, "title")
                 if (pageTitle.startsWith(puzzle.title)) {
                     return ScrapeResult.Success(listOf(crosshare))
                 } else {

@@ -23,7 +23,7 @@ object NewYorkTimesSource : FixedHostSource() {
     override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult {
         // Acrostic puzzles - puzzle data is embedded in gameData.
         if (url.pathname.contains("/acrostic/")) {
-            val gameData = Scraping.readGlobalString(frameId, "gameData")
+            val gameData = "" // Scraping.readGlobalString(frameId, "gameData")
             return if (gameData.isNotEmpty()) {
                 ScrapeResult.Success(puzzles = listOf(NewYorkTimesAcrostic.fromGameData(gameData)))
             } else {
@@ -33,7 +33,7 @@ object NewYorkTimesSource : FixedHostSource() {
 
         // Otherwise, assume this is a regular crossword.
         // First, try searching for embedded puzzle data in the pluribus variable.
-        val pluribus = Scraping.readGlobalString(frameId, "pluribus")
+        val pluribus = "" // Scraping.readGlobalString(frameId, "pluribus")
         if (pluribus.isNotEmpty()) {
             return getNewYorkTimesScrapeResult(NewYorkTimes.fromPluribus(pluribus, Http::fetchAsBinary))
         }
@@ -76,7 +76,7 @@ object NewYorkTimesSource : FixedHostSource() {
 
     private suspend fun getJsonFilenameAndStream(frameId: Int, url: URL): Pair<String, String>? {
         // First, inspect the embedded gameData variable, which may contain the data.
-        val gameDataString = Scraping.readGlobalJson(frameId, "gameData")
+        val gameDataString = "" // Scraping.readGlobalJson(frameId, "gameData")
         if (gameDataString.isNotEmpty()) {
             val gameData = JSON.parse<GameDataJson>(gameDataString)
             if (gameData.filename?.isNotEmpty() == true) {

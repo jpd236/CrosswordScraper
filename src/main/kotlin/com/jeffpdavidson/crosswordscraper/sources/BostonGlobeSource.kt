@@ -15,7 +15,7 @@ object BostonGlobeSource : FixedHostSource() {
     }
 
     override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, frameId: Int): ScrapeResult {
-        val html = Scraping.readGlobalString(frameId, "document.body.outerHTML")
+        val html = Scraping.executeScriptForString(frameId, "bostonglobe")
         return ScrapeResult.Success(listOf(BostonGlobe(html)))
     }
 }

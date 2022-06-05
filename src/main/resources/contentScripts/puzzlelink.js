@@ -1,0 +1,1 @@
+JSON.stringify(Array.from(window.document.querySelectorAll('a[href$=".puz"]').values()).map(elem => elem.href));

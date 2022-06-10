@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+
+    <link href="css/bootstrap.min.css" rel="stylesheet" type="text/css">
+
+    <title>Crossword Scraper - Note About Amuse Labs</title>
+</head>
+
+<body class="py-2">
+<div id="root" class="container-fluid">
+    <h2>Crossword Scraper - Note About Amuse Labs</h2>
+    <hr/>
+    <p>
+        If you are seeing this page, you've encountered a failure scraping an Amuse Labs puzzle. This may be a bug
+        specific to this puzzle (in which case, please <a href="https://github.com/jpd236/kotwords/issues">report
+        it</a>), but if it is happening for multiple puzzles, this page may provide more context as to
+        a likely cause.
+    </p>
+    <p>
+        Recently, Amuse Labs has begun introducing obfuscation measures to try and prevent automatic extraction of their
+        puzzle data. While I believe that Crossword Scraper is friendly to publishers by requiring you to view the page
+        hosting a puzzle - including, for example, any advertisements - before downloading a puzzle, the mechanism it
+        uses to extract puzzle data can also be used by applications to download puzzles directly, without viewing the
+        page. I can only speculate that Amuse Labs is attempting to make such access more difficult.
+    </p>
+    <p>
+        While I would like to keep this tool working for as many sources as possible, I feel it is vital not to
+        antagonize crossword publishers. Also, I maintain this tool in my spare time as a fun project, and cannot spend
+        significant time and energy keeping up with frequent changes designed explicitly to break tools such as this.
+    </p>
+    <p>
+        I will aim to keep the scraper working for Amuse Labs (and all sources) as long as reasonably possible, but
+        please be warned that there may be periods where it is broken as each change can take days to resolve. At some
+        point, support for Amuse Labs puzzles may have to be removed altogether.
+    </p>
+</div>
+<script src="js/jquery.slim.min.js"></script>
+<script src="js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

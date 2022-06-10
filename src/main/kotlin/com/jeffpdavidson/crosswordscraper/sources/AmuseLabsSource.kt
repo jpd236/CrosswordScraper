@@ -18,7 +18,9 @@ object AmuseLabsSource : FixedHostSource() {
         val scrapeFn = js("function() { return window.rawc ? window.rawc : ''; }")
         val puzzleRawc = Scraping.executeFunctionForString(tabId, frameId, scrapeFn)
         if (puzzleRawc.isNotEmpty()) {
-            return ScrapeResult.Success(listOf(PuzzleMe.fromRawc(puzzleRawc)))
+            val onReadyScrapeFn = js("function() { return window.onReady ? window.onReady.toString() : ''; }")
+            val onReadyFn = Scraping.executeFunctionForString(tabId, frameId, onReadyScrapeFn)
+            return ScrapeResult.Success(listOf(PuzzleMe.fromRawc(puzzleRawc, onReadyFn)))
         }
         return ScrapeResult.Success(listOf())
     }

@@ -1,6 +1,7 @@
 package com.jeffpdavidson.crosswordscraper
 
 import browser.permissions.Permissions
+import browser.runtime.getURL
 import com.jeffpdavidson.crosswordscraper.sources.AmuseLabsSource
 import com.jeffpdavidson.crosswordscraper.sources.BostonGlobeSource
 import com.jeffpdavidson.crosswordscraper.sources.CrosshareSource
@@ -308,10 +309,22 @@ object CrosswordScraper {
 
     private fun HtmlBlockTag.renderScrapeError(scrapedPuzzle: ProcessedScrapeResult.Error) {
         classes = classes + "disabled"
+        style = "pointer-events: auto;"
         div(classes = "mb-1") {
             +scrapedPuzzle.source
         }
         +"Scrape error"
+
+        // For Amuse Labs, show disclaimer page in case this is a new form of obfuscation.
+        if (scrapedPuzzle.source == AmuseLabsSource.sourceName) {
+            +" ("
+            a {
+                href = getURL("amuse-labs.html")
+                target = "_blank"
+                +"details"
+            }
+            +")"
+        }
     }
 
     private fun HtmlBlockTag.renderPermissionPrompt(

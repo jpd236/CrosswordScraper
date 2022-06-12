@@ -1,4 +1,4 @@
-package chrome.scripting
+package browser.scripting
 
 @Suppress("UNCHECKED_CAST_TO_EXTERNAL_INTERFACE")
 inline fun InjectionTarget(block: InjectionTarget.() -> Unit) =

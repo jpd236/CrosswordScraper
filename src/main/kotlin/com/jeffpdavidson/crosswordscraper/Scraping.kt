@@ -4,9 +4,10 @@ import browser.tabs.ExecuteScriptDetails
 import browser.tabs.QueryInfo
 import browser.webNavigation.Frame
 import browser.webNavigation.GetAllFramesDetails
-import chrome.scripting.InjectionTarget
-import chrome.scripting.ScriptInjection
+import browser.scripting.InjectionTarget
+import browser.scripting.ScriptInjection
 import kotlinx.coroutines.await
+import kotlin.js.Promise
 
 /** Utilities for scraping content from the user's active tab. */
 object Scraping {
@@ -43,10 +44,10 @@ object Scraping {
             2 -> executeFunctionForStringV2(frameId, function)
             3 -> executeFunctionForStringV3(tabId, frameId, function)
             else -> throw IllegalStateException("Unknown manifest version $manifestVersion")
-        }
+        }.await()
     }
 
-    private suspend fun executeFunctionForStringV2(frameId: Int, function: dynamic): String {
+    private fun executeFunctionForStringV2(frameId: Int, function: dynamic): Promise<String> {
         // The popup runs in an isolated context from the scraped frame, so we first need to inject a script to access
         // the frame. In addition, since the script runs in an isolated context, it can only access the DOM and not any
         // variables (see https://developer.chrome.com/docs/extensions/mv3/content_scripts/). So we inject a script into
@@ -74,17 +75,10 @@ object Scraping {
             }
         ).then {
             it[0] as String
-        }.catch<String> { t ->
-            // When browser.tabs.executeScript returns a rejected Promise, it passes a plain object with a message, not
-            // an Error. This means that "t" isn't actually a Throwable, despite the compile-time type, and if we call
-            // await() directly, it won't actually throw a catchable Throwable, but will just abort execution and dump
-            // the object to the console. So we wrap the object in an actual Exception for type safety.
-            // See: https://youtrack.jetbrains.com/issue/KT-47138
-            throw Exception("Error executing command on frame ${frameId}: ${t.message}")
-        }.await()
+        }
     }
 
-    private suspend fun executeFunctionForStringV3(tabId: Int, frameId: Int, function: dynamic): String {
+    private fun executeFunctionForStringV3(tabId: Int, frameId: Int, function: dynamic): Promise<String> {
         val injection = ScriptInjection {
             target = InjectionTarget {
                 this.tabId = tabId
@@ -93,9 +87,8 @@ object Scraping {
             func = function
             world = "MAIN"
         }
-        // TODO(#4): Use browser polyfill once supported: https://github.com/mozilla/webextension-polyfill/issues/382
-        return chrome.scripting.executeScript(injection).then {
+        return browser.scripting.executeScript(injection).then {
             it[0].result as String
-        }.await()
+        }
     }
 }

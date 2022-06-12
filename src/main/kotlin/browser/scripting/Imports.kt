@@ -1,8 +1,6 @@
-// We can't import from chrome.scripting directly as it crashes in Manifest v2 mode.
-// Instead, we use execute-script-polyfill.js to populate "executeScript" and reference it here.
-// file:JsQualifier("chrome.scripting")
+@file:JsQualifier("browser.scripting")
 
-package chrome.scripting
+package browser.scripting
 
 import kotlin.js.Promise
 

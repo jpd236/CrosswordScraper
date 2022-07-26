@@ -38,6 +38,7 @@ import kotlinx.html.js.p
 import kotlinx.html.js.ul
 import kotlinx.html.style
 import kotlinx.html.tabIndex
+import kotlinx.html.unsafe
 import org.khronos.webgl.Int8Array
 import org.w3c.dom.HTMLAnchorElement
 import org.w3c.dom.HTMLDivElement
@@ -260,7 +261,13 @@ object CrosswordScraper {
         val source = scrapedPuzzle.source
         val title = puzzleTitle.ifEmpty { puzzleAuthor.ifEmpty { source } }
         div(classes = "mb-1") {
-            +title
+            if (scrapedPuzzle.puzzle.hasHtmlClues) {
+                unsafe {
+                    +title
+                }
+            } else {
+                +title
+            }
         }
 
         // Filename to use with the output files - in descending priority, author-title, title, author, scraping source.
@@ -271,7 +278,14 @@ object CrosswordScraper {
                 source
             } else {
                 fileTitleParts.joinToString("-") { part ->
-                    part.split("\\s+".toRegex()).joinToString("") {
+                    val cleanedText = if (scrapedPuzzle.puzzle.hasHtmlClues) {
+                        val elem = document.createElement("div") as HTMLDivElement
+                        elem.innerHTML = part
+                        elem.innerText
+                    } else {
+                        part
+                    }
+                    cleanedText.split("\\s+".toRegex()).joinToString("") {
                         it.replace("[^A-Za-z0-9]".toRegex(), "").replaceFirstChar { ch -> ch.uppercase() }
                     }
                 }

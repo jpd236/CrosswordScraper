@@ -2,7 +2,7 @@
   "manifest_version": {MANIFEST_VERSION},
   "name": "Crossword Scraper",
   "description": "Download .puz, .jpz, or .pdf files from crossword applets for offline solving.",
-  "version": "1.2.13",
+  "version": "1.2.14",
   "icons": {
     "128": "128.png"
   },

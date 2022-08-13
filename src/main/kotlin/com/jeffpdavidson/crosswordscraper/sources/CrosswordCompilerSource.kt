@@ -12,6 +12,7 @@ object CrosswordCompilerSource : Source {
 
     private val knownIframeHosts = listOf(
         "apps.washingtonexaminer.com",
+        "aws1.washingtonexaminer.com",
         "www.brendanemmettquigley.com"
     )
 

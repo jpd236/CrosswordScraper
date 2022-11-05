@@ -19,6 +19,7 @@ import com.jeffpdavidson.kotwords.model.Puzzle
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.dom.addClass
 import kotlinx.dom.clear
@@ -47,6 +48,8 @@ import org.w3c.dom.HTMLParagraphElement
 import org.w3c.dom.url.URL
 import org.w3c.files.Blob
 import org.w3c.files.FileReader
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 import kotlin.js.Date
 
 /** Core logic of the scraper - render the popup page and perform scraping. */
@@ -77,6 +80,8 @@ object CrosswordScraper {
     suspend fun load() {
         val (puzzles, debugLog) = scrapePuzzles()
 
+        // Always render the popup, even if automatic download is enabled. If there's an error with the download, this
+        // allows the user to pick another option or report an issue.
         val puzzleContainer = document.getElementById("puzzle-container") as HTMLDivElement
         puzzleContainer.append {
             if (puzzles.isEmpty()) {
@@ -128,18 +133,42 @@ object CrosswordScraper {
                 a {
                     href = "#"
                     onClickFunction = {
-                        startDownload(
-                            "CrosswordScraper-debug-log-${Date(Date.now()).toISOString()}.txt",
-                            debugLog.encodeToByteArray()
-                        )
+                        GlobalScope.launch {
+                            startDownload(
+                                "CrosswordScraper-debug-log-${Date(Date.now()).toISOString()}.txt",
+                                debugLog.encodeToByteArray()
+                            )
+                        }
                     }
                     +"Save debug log"
                 }
             }
         }
 
+        if (Settings.isAutoDownloadEnabled() && puzzles.size == 1 && puzzles.first() is ProcessedScrapeResult.Success) {
+            // Attempt to automatically download the puzzle, and close the window if it succeeds.
+            val scrapedPuzzle = puzzles.first() as ProcessedScrapeResult.Success
+            val baseFilename = getBaseFilename(scrapedPuzzle)
+            GlobalScope.launch {
+                if (onDownloadClicked(baseFilename, Settings.getAutoDownloadFormat(), scrapedPuzzle)) {
+                    // Close the window automatically. HACK: Some delay seems to be necessary for Firefox to start the
+                    // download successfully; it's not clear what other event this could be tied to.
+                    delay(100)
+                    window.close()
+                } else {
+                    onLoadingComplete()
+                }
+            }
+        } else {
+            onLoadingComplete()
+        }
+    }
+
+    private fun onLoadingComplete() {
         val loadingContainer = document.getElementById("loading-container") as HTMLDivElement
         loadingContainer.addClass("d-none")
+
+        val puzzleContainer = document.getElementById("puzzle-container") as HTMLDivElement
         puzzleContainer.removeClass("d-none")
     }
 
@@ -268,26 +297,7 @@ object CrosswordScraper {
             }
         }
 
-        // Filename to use with the output files - in descending priority, author-title, title, author, scraping source.
-        // Each word is capitalized, and non-alphanumeric characters are removed.
-        val fileTitleParts = listOf(puzzleAuthor, puzzleTitle).filterNot { it.isEmpty() }
-        val filenameBase =
-            if (fileTitleParts.isEmpty()) {
-                source
-            } else {
-                fileTitleParts.joinToString("-") { part ->
-                    val cleanedText = if (scrapedPuzzle.puzzle.hasHtmlClues) {
-                        val elem = document.createElement("div") as HTMLDivElement
-                        elem.innerHTML = part
-                        elem.innerText
-                    } else {
-                        part
-                    }
-                    cleanedText.split("\\s+".toRegex()).joinToString("") {
-                        it.replace("[^A-Za-z0-9]".toRegex(), "").replaceFirstChar { ch -> ch.uppercase() }
-                    }
-                }
-            }
+        val baseFilename = getBaseFilename(scrapedPuzzle)
 
         // Render each download link labeled by the extension, separated by "|".
         FileFormat.values()
@@ -300,23 +310,64 @@ object CrosswordScraper {
                     href = "#"
                     onClickFunction = {
                         GlobalScope.launch {
-                            try {
-                                startDownload(
-                                    "$filenameBase.${fileFormat.extension}",
-                                    fileFormat.puzzleToBinary(scrapedPuzzle.puzzle)
-                                )
-                            } catch (t: Throwable) {
-                                console.info("Error converting to ${fileFormat.name}:", t.stackTraceToString())
-                                showErrorModal(
-                                    "Error converting to ${fileFormat.extension.uppercase()}. " +
-                                            "Please try another format."
-                                )
-                            }
+                            onDownloadClicked(baseFilename, fileFormat, scrapedPuzzle)
                         }
                     }
                     +fileFormat.extension.uppercase()
                 }
             }
+    }
+
+    /** Return the base filename (without extension) to use when downloading this puzzle. */
+    private fun getBaseFilename(scrapedPuzzle: ProcessedScrapeResult.Success): String {
+        // In descending priority, author-title, title, author, scraping source.
+        // Each word is capitalized, and non-alphanumeric characters are removed.
+        val puzzleTitle = scrapedPuzzle.puzzle.title
+        val puzzleAuthor = scrapedPuzzle.puzzle.creator
+        val source = scrapedPuzzle.source
+        val fileTitleParts = listOf(puzzleAuthor, puzzleTitle).filterNot { it.isEmpty() }
+        return if (fileTitleParts.isEmpty()) {
+            source
+        } else {
+            fileTitleParts.joinToString("-") { part ->
+                val cleanedText = if (scrapedPuzzle.puzzle.hasHtmlClues) {
+                    val elem = document.createElement("div") as HTMLDivElement
+                    elem.innerHTML = part
+                    elem.innerText
+                } else {
+                    part
+                }
+                cleanedText.split("\\s+".toRegex()).joinToString("") {
+                    it.replace("[^A-Za-z0-9]".toRegex(), "").replaceFirstChar { ch -> ch.uppercase() }
+                }
+            }
+        }
+    }
+
+    /**
+     * Start the download, or show an error dialog if the download fails.
+     *
+     * @return whether the download was started successfully.
+     */
+    private suspend fun onDownloadClicked(
+        baseFilename: String,
+        fileFormat: FileFormat,
+        scrapedPuzzle: ProcessedScrapeResult.Success
+    ): Boolean {
+        return try {
+            startDownload(
+                "$baseFilename.${fileFormat.extension}",
+                fileFormat.puzzleToBinary(scrapedPuzzle.puzzle)
+            )
+            true
+        } catch (t: Throwable) {
+            console.info("Error converting to ${fileFormat.name}:", t.stackTraceToString())
+            showErrorModal(
+                "Error converting to ${fileFormat.extension.uppercase()}. " +
+                        "Please try another format."
+            )
+            false
+        }
     }
 
     private fun HtmlBlockTag.renderScrapeError(scrapedPuzzle: ProcessedScrapeResult.Error) {
@@ -392,15 +443,18 @@ object CrosswordScraper {
     }
 
     /** Initiate a user download of the given data. */
-    private fun startDownload(fileName: String, data: ByteArray) {
+    private suspend fun startDownload(fileName: String, data: ByteArray) {
         val reader = FileReader()
-        reader.onload = { event ->
-            val link = document.createElement("a") as HTMLAnchorElement
-            link.download = fileName
-            link.href = event.target.asDynamic().result as String
-            link.click()
+        suspendCoroutine<Unit> { cont ->
+            reader.onload = { event ->
+                val link = document.createElement("a") as HTMLAnchorElement
+                link.download = fileName
+                link.href = event.target.asDynamic().result as String
+                link.click()
+                cont.resume(Unit)
+            }
+            reader.readAsDataURL(Blob(arrayOf(Int8Array(data.toTypedArray()).buffer)))
         }
-        reader.readAsDataURL(Blob(arrayOf(Int8Array(data.toTypedArray()).buffer)))
     }
 
     /**

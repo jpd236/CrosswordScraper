@@ -12,7 +12,7 @@ enum class FileFormat(
     val supportsPuzzle: (Puzzle) -> Boolean,
     val puzzleToBinary: (suspend (Puzzle) -> ByteArray),
 ) {
-    ACROSS_LITE(
+    PUZ(
         "puz",
         { it.supportsAcrossLite() },
         { it.asAcrossLiteBinary(writeUtf8 = Settings.isPuzUnicodeSupportEnabled()) }),

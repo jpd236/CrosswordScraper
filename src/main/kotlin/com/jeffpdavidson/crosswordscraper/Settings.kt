@@ -36,6 +36,8 @@ object Settings {
     private const val ID_PDF_INK_SAVER_PERCENTAGE_TEXT = "pdf-ink-saver-text"
     private const val ID_PDF_INK_SAVER_PERCENTAGE_SQUARE = "pdf-ink-saver-square"
     private const val ID_PDF_FONT = "pdf-font"
+    private const val ID_AUTO_DOWNLOAD = "auto-download"
+    private const val ID_AUTO_DOWNLOAD_FORMAT = "auto-download-format"
 
     private val puzUnicodeSupportInput by lazy { document.getElementById(ID_PUZ_UNICODE_SUPPORT) as HTMLInputElement }
     private val pdfInkSaverPercentageInput by lazy {
@@ -48,11 +50,57 @@ object Settings {
         document.getElementById(ID_PDF_INK_SAVER_PERCENTAGE_SQUARE) as HTMLDivElement
     }
     private val pdfFont by lazy { document.getElementById(ID_PDF_FONT) as HTMLSelectElement }
+    private val autoDownload by lazy { document.getElementById(ID_AUTO_DOWNLOAD) as HTMLInputElement }
+    private val autoDownloadFormat by lazy { document.getElementById(ID_AUTO_DOWNLOAD_FORMAT) as HTMLSelectElement }
 
     /** Render the popup page. Intended to be loaded from options.html. */
     suspend fun load() {
         val optionsContainer = document.getElementById("options-container") as HTMLDivElement
         optionsContainer.append {
+            h4 {
+                +"Automatic Download"
+            }
+            div("form-group") {
+                div("form-check") {
+                    input(type = InputType.checkBox, classes = "form-check-input") {
+                        id = ID_AUTO_DOWNLOAD
+                        onChangeFunction = {
+                            onAutoDownloadChanged()
+                        }
+                    }
+                    label(classes = "form-check-label") {
+                        htmlFor = ID_AUTO_DOWNLOAD
+                        +"Automatically download crosswords"
+                    }
+                }
+                small("form-text text-muted") {
+                    +("If a page has exactly one crossword present, opening Crossword Scraper will automatically " +
+                            "download that puzzle and close the scraper dialog.")
+                }
+            }
+            div("form-group") {
+                label {
+                    htmlFor = ID_AUTO_DOWNLOAD_FORMAT
+                    +"Format"
+                }
+                select("form-control") {
+                    id = ID_AUTO_DOWNLOAD_FORMAT
+                    style = "max-width: 100px;"
+                    FileFormat.values().forEach { format ->
+                        option {
+                            value = format.name
+                            +format.name
+                        }
+                    }
+                    onChangeFunction = {
+                        setAutoDownloadFormat(FileFormat.valueOf(autoDownloadFormat.value))
+                    }
+                }
+                small("form-text text-muted") {
+                    +("Format to use for automatic downloads. If the puzzle cannot be downloaded in this format, the " +
+                            "normal dialog will be shown instead with other options.")
+                }
+            }
             h4 {
                 +"PUZ"
             }
@@ -80,7 +128,7 @@ object Settings {
             div("form-group") {
                 label {
                     htmlFor = ID_PDF_INK_SAVER_PERCENTAGE
-                    +"Ink Saver Percentage"
+                    +"Ink Saver percentage"
                 }
                 div("d-flex align-items-center") {
                     input(type = InputType.range, classes = "custom-range") {
@@ -125,7 +173,6 @@ object Settings {
                         setPdfFont(pdfFont.value)
                     }
                 }
-
             }
             button(classes = "btn btn-secondary btn-sm") {
                 +"Reset to defaults"
@@ -145,6 +192,10 @@ object Settings {
     }
 
     private suspend fun initializeWidgets() {
+        val isAutoDownloadEnabled = isAutoDownloadEnabled()
+        autoDownload.checked = isAutoDownloadEnabled
+        autoDownloadFormat.disabled = !isAutoDownloadEnabled
+        autoDownloadFormat.value = getAutoDownloadFormat().name
         puzUnicodeSupportInput.checked = isPuzUnicodeSupportEnabled()
         pdfInkSaverPercentageInput.value = getPdfInkSaverPercentage().toString()
         onInkSaverPercentageInput()
@@ -155,6 +206,41 @@ object Settings {
         pdfInkSaverPercentageText.innerText = "${pdfInkSaverPercentageInput.value}%"
         pdfInkSaverPercentageSquare.style.backgroundColor =
             Pdf.getAdjustedColor(RGB("#000000"), pdfInkSaverPercentageInput.value.toInt() / 100f).toHex()
+    }
+
+    private fun onAutoDownloadChanged() {
+        setAutoDownloadEnabled(autoDownload.checked)
+        autoDownloadFormat.disabled = !autoDownload.checked
+    }
+
+    /** Whether automatic downloading is enabled. Default is false. */
+    suspend fun isAutoDownloadEnabled(): Boolean {
+        val items = browser.storage.sync.get(ID_AUTO_DOWNLOAD).await()
+        return items[ID_AUTO_DOWNLOAD] as? Boolean ?: false
+    }
+
+    private fun setAutoDownloadEnabled(enabled: Boolean) {
+        val items = js("{}")
+        items[ID_AUTO_DOWNLOAD] = enabled
+        browser.storage.sync.set(items)
+    }
+
+    /** Format to use if automatic downloading is enabled. Default is PUZ. */
+    suspend fun getAutoDownloadFormat(): FileFormat {
+        val items = browser.storage.sync.get(ID_AUTO_DOWNLOAD_FORMAT).await()
+        val formatString = items[ID_AUTO_DOWNLOAD_FORMAT] as? String ?: return FileFormat.PUZ
+        return try {
+            FileFormat.valueOf(formatString)
+        } catch (e: IllegalArgumentException) {
+            // Illegal value in storage - revert to PUZ.
+            FileFormat.PUZ
+        }
+    }
+
+    private fun setAutoDownloadFormat(format: FileFormat) {
+        val items = js("{}")
+        items[ID_AUTO_DOWNLOAD_FORMAT] = format.name
+        browser.storage.sync.set(items)
     }
 
     /** Whether the user has enabled unicode support for .puz files. Default is false. */

@@ -25,5 +25,5 @@
     "http://*/",
     "https://*/"
   ],
-  "minimum_chrome_version": "{MINIMUM_CHROME_VERSION}"
+  {BROWSER_SPECIFIC_SETTINGS}
 }

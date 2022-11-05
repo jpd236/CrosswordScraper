@@ -11,7 +11,7 @@ version = "1.2.16-SNAPSHOT"
 repositories {
     mavenCentral()
     // TODO: Remove ahead of public release.
-    // maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
+    maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
 }
 
 dependencies {
@@ -20,7 +20,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
     implementation("com.github.ajalt.colormath:colormath:3.2.0")
 
-    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.2.12")
+    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.2.13-SNAPSHOT")
 
     runtimeOnly(npm("webextension-polyfill", "0.8.0"))
     runtimeOnly(npm("jquery", "3.6.0"))
@@ -42,25 +42,25 @@ kotlin {
     }
 }
 
-// Define developmentVnExtension and productionVnExtension tasks which build in development/production mode.
-// n may be "2" for Manifest v2 or "3" for Manifest v3.
+// Define development{Browser}Extension and production{Browser}Extension tasks which build in development/production
+// mode. {Browser} may be "Chrome" (manifest V3) or "Firefox" (manifest V2).
 tasks {
     val development = "development"
     val production = "production"
     val environments = listOf(development, production)
 
-    val v2 = "v2"
-    val v3 = "v3"
-    val manifestVersions = listOf(v2, v3)
+    val chrome = "chrome"
+    val firefox = "firefox"
+    val browsers = listOf(chrome, firefox)
 
     val variants = environments.flatMap { env ->
-        manifestVersions.map { manifestVersion ->
-            env to manifestVersion
+        browsers.map { browser ->
+            env to browser
         }
     }
 
-    val tasks = variants.associateWith { (env, manifestVersion) ->
-        val variantName = "$env${manifestVersion.capitalize()}"
+    val tasks = variants.associateWith { (env, browser) ->
+        val variantName = "$env${browser.capitalize()}"
         val extensionFolder = "build/extension/$variantName"
 
         val browserWebpackTask = getByName("browser${env.capitalize()}Webpack", KotlinWebpack::class)
@@ -82,21 +82,27 @@ tasks {
         val copyManifest = register<Copy>("copy${variantName.capitalize()}Manifest") {
             from("src/main/resources/manifest.json")
             into(extensionFolder)
-            // Replace placeholders in manifest.json based on the manifest version.
-            when (manifestVersion) {
-                v2 -> filter { line ->
+            // Replace placeholders in manifest.json based on the browser.
+            when (browser) {
+                firefox -> filter { line ->
                     line.replace("{MANIFEST_VERSION}", "2")
                         .replace("{ACTION_KEY}", "browser_action")
                         .replace("{PERMISSIONS}", "")
                         .replace("{OPTIONAL_HOST_PERMISSION_KEY}", "optional_permissions")
-                        .replace("{MINIMUM_CHROME_VERSION}", "42")
+                        .replace("{BROWSER_SPECIFIC_SETTINGS}",
+                            """"browser_specific_settings": {
+                                "gecko": {
+                                   "id": "{d48182db-7419-4305-8f09-e886fbd4d74d}"
+                                }
+                            }
+                            """.trimIndent())
                 }
-                v3 -> filter { line ->
+                chrome -> filter { line ->
                     line.replace("{MANIFEST_VERSION}", "3")
                         .replace("{ACTION_KEY}", "action")
                         .replace("{PERMISSIONS}", ",\"scripting\"")
                         .replace("{OPTIONAL_HOST_PERMISSION_KEY}", "optional_host_permissions")
-                        .replace("{MINIMUM_CHROME_VERSION}", "102")
+                        .replace("{BROWSER_SPECIFIC_SETTINGS}", "\"minimum_chrome_version\": \"102\"")
                 }
             }
         }
@@ -125,6 +131,6 @@ tasks {
     }
 
     assemble {
-        dependsOn(tasks[production to v2])
+        dependsOn(tasks[production to chrome], tasks[production to firefox])
     }
 }

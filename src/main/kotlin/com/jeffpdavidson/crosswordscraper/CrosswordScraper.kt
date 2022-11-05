@@ -118,10 +118,6 @@ object CrosswordScraper {
             div(classes = "text-muted") {
                 style = "font-size: 0.7rem"
                 +"Version: ${browser.runtime.getManifest().version}"
-                // TODO(#4): Delete this once Manifest v3 is being shipped.
-                if (browser.runtime.getManifest().manifest_version == 3) {
-                    +" (Manifest v3)"
-                }
                 br { }
                 a {
                     href = "https://github.com/jpd236/CrosswordScraper/issues/new"

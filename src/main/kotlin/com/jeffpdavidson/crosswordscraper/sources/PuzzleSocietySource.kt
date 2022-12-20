@@ -13,7 +13,7 @@ import org.w3c.dom.url.URL
 object PuzzleSocietySource : FixedHostSource() {
 
     override val sourceName: String = "Puzzle Society"
-    override val neededHostPermissions = listOf("https://crossword-game.azureedge.net/*")
+    override fun neededHostPermissions(url: URL) = listOf("https://crossword-game.azureedge.net/*")
 
     private val DATE_FORMAT = DateFormat("yyyy-MM-dd")
 

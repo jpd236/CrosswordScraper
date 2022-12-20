@@ -7,7 +7,7 @@ import org.w3c.dom.url.URL
 object UniversalSource : FixedHostSource() {
 
     override val sourceName: String = "Universal Uclick"
-    override val neededHostPermissions = listOf("https://*.universaluclick.com/*")
+    override fun neededHostPermissions(url: URL) = listOf("https://*.universaluclick.com/*")
 
     override fun matchesUrl(url: URL): Boolean {
         return url.host == "embed.universaluclick.com"

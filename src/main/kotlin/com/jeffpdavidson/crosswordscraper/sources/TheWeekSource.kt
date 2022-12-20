@@ -8,7 +8,7 @@ import org.w3c.dom.url.URL
 object TheWeekSource : FixedHostSource() {
 
     override val sourceName: String = "The Week"
-    override val neededHostPermissions = listOf("https://*.theweek.com/*")
+    override fun neededHostPermissions(url: URL) = listOf("https://*.theweek.com/*")
 
     override fun matchesUrl(url: URL): Boolean {
         return url.host == "theweek.com"
@@ -21,8 +21,8 @@ object TheWeekSource : FixedHostSource() {
         val scrapeFn = js("function() { return window.xrPuzUrl ? JSON.stringify(window.xrPuzUrl) : ''; }")
         val puzzleUrl = Scraping.executeFunctionForString(tabId, frameId, scrapeFn)
         if (puzzleUrl.isNotEmpty()) {
-            if (!hasPermissions(neededHostPermissions)) {
-                return ScrapeResult.NeedPermissions(neededHostPermissions)
+            if (!hasPermissions(neededHostPermissions(url))) {
+                return ScrapeResult.NeedPermissions(neededHostPermissions(url))
             }
             return ScrapeResult.Success(listOf(AcrossLite(Http.fetchAsBinary("${url.origin}${puzzleUrl.trim('"')}"))))
         }

@@ -13,7 +13,7 @@ import org.w3c.dom.url.URLSearchParams
 
 object CrosswordNexusSource : FixedHostSource() {
     override val sourceName: String = "Crossword Nexus"
-    override val neededHostPermissions = listOf("https://*.crosswordnexus.com/*")
+    override fun neededHostPermissions(url: URL) = listOf("https://*.crosswordnexus.com/*")
 
     override fun matchesUrl(url: URL): Boolean = url.hostIsDomainOrSubdomainOf("crosswordnexus.com")
 

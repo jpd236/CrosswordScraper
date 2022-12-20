@@ -8,10 +8,16 @@ import org.w3c.dom.url.URL
 object AmuseLabsSource : FixedHostSource() {
 
     override val sourceName = "PuzzleMe (Amuse Labs)"
-    override val neededHostPermissions = listOf("https://*.amuselabs.com/*")
 
     override fun matchesUrl(url: URL): Boolean {
-        return url.hostIsDomainOrSubdomainOf("amuselabs.com")
+        return url.hostIsDomainOrSubdomainOf("amuselabs.com") || url.hostIsDomainOrSubdomainOf("newyorker.com")
+    }
+
+    override fun neededHostPermissions(url: URL): List<String> {
+        if (url.hostIsDomainOrSubdomainOf("newyorker.com")) {
+            return listOf("https://*.newyorker.com/*")
+        }
+        return listOf("https://*.amuselabs.com/*")
     }
 
     override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult {

@@ -14,7 +14,7 @@ object NewYorkTimesSource : FixedHostSource() {
     private val KNOWN_URL_PATTERN = "(daily|mini|bonus)/(\\d{4})/(\\d{2})/(\\d{2})".toRegex()
 
     override val sourceName = "New York Times"
-    override val neededHostPermissions = listOf("https://*.nytimes.com/*")
+    override fun neededHostPermissions(url: URL) = listOf("https://*.nytimes.com/*")
 
     override fun matchesUrl(url: URL): Boolean {
         return url.hostIsDomainOrSubdomainOf("nytimes.com")
@@ -46,7 +46,7 @@ object NewYorkTimesSource : FixedHostSource() {
             // For simplicity, request permissions to both the main site and the API site, even though we might only
             // need them for the main site.
             val apiUrl = "https://nyt-games-prd.appspot.com/svc/crosswords/v6/puzzle/${filename}.json"
-            val neededPermissions = neededHostPermissions + getPermissionsForUrls(listOf(URL(apiUrl)))
+            val neededPermissions = neededHostPermissions(url) + getPermissionsForUrls(listOf(URL(apiUrl)))
             if (!hasPermissions(neededPermissions)) {
                 return ScrapeResult.NeedPermissions(neededPermissions)
             }

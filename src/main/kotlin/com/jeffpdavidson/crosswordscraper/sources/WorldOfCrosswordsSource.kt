@@ -9,7 +9,7 @@ import kotlin.js.Date
 object WorldOfCrosswordsSource : FixedHostSource() {
 
     override val sourceName = "World of Crosswords"
-    override val neededHostPermissions = listOf("https://*.worldofcrosswords.com/*")
+    override fun neededHostPermissions(url: URL) = listOf("https://*.worldofcrosswords.com/*")
 
     override fun matchesUrl(url: URL): Boolean {
         return url.hostIsDomainOrSubdomainOf("worldofcrosswords.com")
@@ -18,8 +18,8 @@ object WorldOfCrosswordsSource : FixedHostSource() {
 
     override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult {
         // We do an unconditional HTTP fetch, so we always need permissions, even in the top-level frame.
-        if (!hasPermissions(neededHostPermissions)) {
-            return ScrapeResult.NeedPermissions(neededHostPermissions)
+        if (!hasPermissions(neededHostPermissions(url))) {
+            return ScrapeResult.NeedPermissions(neededHostPermissions(url))
         }
 
         // Map /, /index.php -> /getEmptyPuzzle.php

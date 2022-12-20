@@ -12,7 +12,7 @@ object CrosshareSource : FixedHostSource() {
     private val PUZZLE_ID_PATTERN = "crosswords/([^/]+)".toRegex()
 
     override val sourceName = "Crosshare"
-    override val neededHostPermissions = listOf("https://*.crosshare.org/*")
+    override fun neededHostPermissions(url: URL) = listOf("https://*.crosshare.org/*")
 
     override fun matchesUrl(url: URL): Boolean {
         return url.hostIsDomainOrSubdomainOf("crosshare.org") &&
@@ -49,8 +49,8 @@ object CrosshareSource : FixedHostSource() {
 
         // Fall back to the PUZ API - this requires a separate fetch, but should always work.
         val matchResult = PUZZLE_ID_PATTERN.find(url.toString()) ?: return ScrapeResult.Success(listOf())
-        if (!hasPermissions(neededHostPermissions)) {
-            return ScrapeResult.NeedPermissions(neededHostPermissions)
+        if (!hasPermissions(neededHostPermissions(url))) {
+            return ScrapeResult.NeedPermissions(neededHostPermissions(url))
         }
         val puzzleId = matchResult.groupValues[1]
         return ScrapeResult.Success(listOf(AcrossLite(Http.fetchAsBinary("https://crosshare.org/api/puz/$puzzleId"))))

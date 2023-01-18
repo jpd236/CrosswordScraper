@@ -8,11 +8,11 @@ import org.w3c.dom.url.URL
 object WallStreetJournalSource : FixedHostSource() {
 
     override val sourceName = "Wall Street Journal"
-    override fun neededHostPermissions(url: URL) = listOf("https://*.wsj.com/*")
+    override fun neededHostPermissions(url: URL) = listOf("https://*.wsj.com/*", "https://s3.amazonaws.com/*")
 
     override fun matchesUrl(url: URL): Boolean {
-        return (url.host == "wsj.com" || url.host.endsWith(".wsj.com"))
-                && url.pathname.startsWith("/puzzles/crossword/")
+        return (url.host == "wsj.com" || url.host.endsWith(".wsj.com") || url.host == "s3.amazonaws.com")
+                && url.pathname.contains("/puzzles/crossword/")
     }
 
     override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult {

@@ -21,7 +21,17 @@ object AmuseLabsSource : FixedHostSource() {
     }
 
     override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult {
-        val scrapeFn = js("function() { return window.rawc ? window.rawc : ''; }")
+        val scrapeFn = js(
+            """function() {
+                if (window.puzzleEnv && window.puzzleEnv.rawc) {
+                    return window.puzzleEnv.rawc;
+                }
+                if (window.rawc) {
+                    return window.rawc;
+                }
+                return '';
+            }"""
+        )
         val puzzleRawc = Scraping.executeFunctionForString(tabId, frameId, scrapeFn)
         if (puzzleRawc.isNotEmpty()) {
             val onReadyScrapeFn = js("function() { return window.onReady ? window.onReady.toString() : ''; }")

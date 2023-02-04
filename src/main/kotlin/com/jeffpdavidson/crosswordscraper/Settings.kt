@@ -3,7 +3,7 @@ package com.jeffpdavidson.crosswordscraper
 import com.github.ajalt.colormath.model.RGB
 import com.jeffpdavidson.kotwords.formats.Pdf
 import kotlinx.browser.document
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.await
 import kotlinx.coroutines.launch
 import kotlinx.dom.addClass
@@ -52,6 +52,8 @@ object Settings {
     private val pdfFont by lazy { document.getElementById(ID_PDF_FONT) as HTMLSelectElement }
     private val autoDownload by lazy { document.getElementById(ID_AUTO_DOWNLOAD) as HTMLInputElement }
     private val autoDownloadFormat by lazy { document.getElementById(ID_AUTO_DOWNLOAD_FORMAT) as HTMLSelectElement }
+
+    private val mainScope = MainScope()
 
     /** Render the popup page. Intended to be loaded from options.html. */
     suspend fun load() {
@@ -177,7 +179,7 @@ object Settings {
             button(classes = "btn btn-secondary btn-sm") {
                 +"Reset to defaults"
                 onClickFunction = {
-                    GlobalScope.launch {
+                    mainScope.launch {
                         resetDefaults()
                     }
                 }

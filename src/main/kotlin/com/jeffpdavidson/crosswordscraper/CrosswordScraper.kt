@@ -18,7 +18,7 @@ import com.jeffpdavidson.crosswordscraper.sources.WorldOfCrosswordsSource
 import com.jeffpdavidson.kotwords.model.Puzzle
 import kotlinx.browser.document
 import kotlinx.browser.window
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.dom.addClass
@@ -76,6 +76,8 @@ object CrosswordScraper {
         PuzzleLinkSource,
     )
 
+    private val mainScope = MainScope()
+
     /** Render the popup page. Intended to be loaded from popup.html. */
     suspend fun load() {
         val (puzzles, debugLog) = scrapePuzzles()
@@ -102,7 +104,7 @@ object CrosswordScraper {
                                         // See https://bugs.chromium.org/p/chromium/issues/detail?id=952645.
                                         if (granted) {
                                             puzzleContainer.clear()
-                                            GlobalScope.launch {
+                                            mainScope.launch {
                                                 load()
                                             }
                                         }
@@ -133,7 +135,7 @@ object CrosswordScraper {
                 a {
                     href = "#"
                     onClickFunction = {
-                        GlobalScope.launch {
+                        mainScope.launch {
                             startDownload(
                                 "CrosswordScraper-debug-log-${Date(Date.now()).toISOString()}.txt",
                                 debugLog.encodeToByteArray()
@@ -149,7 +151,7 @@ object CrosswordScraper {
             // Attempt to automatically download the puzzle, and close the window if it succeeds.
             val scrapedPuzzle = puzzles.first() as ProcessedScrapeResult.Success
             val baseFilename = getBaseFilename(scrapedPuzzle)
-            GlobalScope.launch {
+            mainScope.launch {
                 if (onDownloadClicked(baseFilename, Settings.getAutoDownloadFormat(), scrapedPuzzle)) {
                     // Close the window automatically. HACK: Some delay seems to be necessary for Firefox to start the
                     // download successfully; it's not clear what other event this could be tied to.
@@ -309,7 +311,7 @@ object CrosswordScraper {
                 a {
                     href = "#"
                     onClickFunction = {
-                        GlobalScope.launch {
+                        mainScope.launch {
                             onDownloadClicked(baseFilename, fileFormat, scrapedPuzzle)
                         }
                     }

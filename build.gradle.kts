@@ -11,8 +11,7 @@ version = "1.2.21-SNAPSHOT"
 repositories {
     mavenCentral()
     // TODO: Remove ahead of public release.
-    // maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
-    // mavenLocal()
+    maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
 }
 
 dependencies {

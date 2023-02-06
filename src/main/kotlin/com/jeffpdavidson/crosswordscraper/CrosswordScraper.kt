@@ -15,6 +15,7 @@ import com.jeffpdavidson.crosswordscraper.sources.TheWeekSource
 import com.jeffpdavidson.crosswordscraper.sources.UniversalSource
 import com.jeffpdavidson.crosswordscraper.sources.WallStreetJournalSource
 import com.jeffpdavidson.crosswordscraper.sources.WorldOfCrosswordsSource
+import com.jeffpdavidson.kotwords.formats.Puzzleable
 import com.jeffpdavidson.kotwords.model.Puzzle
 import kotlinx.browser.document
 import kotlinx.browser.window
@@ -175,7 +176,7 @@ object CrosswordScraper {
     }
 
     private sealed class ProcessedScrapeResult {
-        data class Success(val source: String, val puzzle: Puzzle) : ProcessedScrapeResult()
+        data class Success(val source: String, val puzzleable: Puzzleable, val puzzle: Puzzle) : ProcessedScrapeResult()
         data class NeedPermissions(
             val source: String,
             val permissions: List<String>,
@@ -211,9 +212,15 @@ object CrosswordScraper {
                             is ScrapeResult.Success -> {
                                 result.puzzles.forEach { puzzleable ->
                                     try {
+                                        // Even though the ultimate conversion uses the Puzzleable - to avoid touching a
+                                        // file that's already in the desired format - we still need to parse as a
+                                        // Puzzle so we know the metadata to show in the list and to be able to show
+                                        // other supported formats.
                                         val puzzle = puzzleable.asPuzzle()
                                         if (!isDuplicate(processedGrids, puzzle.grid)) {
-                                            puzzles.add(ProcessedScrapeResult.Success(source.sourceName, puzzle))
+                                            puzzles.add(
+                                                ProcessedScrapeResult.Success(source.sourceName, puzzleable, puzzle)
+                                            )
                                             processedGrids.add(puzzle.grid)
                                             debugLog.appendLine(
                                                 "Successful scrape: source = ${source.sourceName}, " +
@@ -359,7 +366,7 @@ object CrosswordScraper {
         return try {
             startDownload(
                 "$baseFilename.${fileFormat.extension}",
-                fileFormat.puzzleToBinary(scrapedPuzzle.puzzle)
+                fileFormat.puzzleableToBinary(scrapedPuzzle.puzzleable)
             )
             true
         } catch (t: Throwable) {

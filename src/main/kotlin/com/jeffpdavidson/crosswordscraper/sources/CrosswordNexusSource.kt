@@ -4,7 +4,7 @@ import com.jeffpdavidson.crosswordscraper.Http
 import com.jeffpdavidson.crosswordscraper.Scraping
 import com.jeffpdavidson.crosswordscraper.sources.Source.Companion.hostIsDomainOrSubdomainOf
 import com.jeffpdavidson.kotwords.formats.AcrossLite
-import com.jeffpdavidson.kotwords.formats.Jpz
+import com.jeffpdavidson.kotwords.formats.JpzFile
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
@@ -59,7 +59,7 @@ object CrosswordNexusSource : FixedHostSource() {
                 .partition { it.first.endsWith(".jpz") }
         return ScrapeResult.Success(
             puzzles = fetchedUrls.first.map {
-                Jpz.fromJpzFile(it.second)
+                JpzFile(it.second)
             } + fetchedUrls.second.map {
                 AcrossLite(it.second)
             }

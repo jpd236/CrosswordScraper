@@ -27,9 +27,7 @@ object WallStreetJournalSource : FixedHostSource() {
         }
         val puzzleJson = JSON.parse<PuzzleJson>(puzzleJsonString)
         if (puzzleJson.data.meta.type == "acrostic") {
-            return ScrapeResult.Success(
-                puzzles = listOf(WallStreetJournalAcrostic(JSON.stringify(puzzleJson.data)).asAcrostic())
-            )
+            return ScrapeResult.Success(puzzles = listOf(WallStreetJournalAcrostic(JSON.stringify(puzzleJson.data))))
         }
         return ScrapeResult.Success(listOf(WallStreetJournal(puzzleJsonString)))
     }

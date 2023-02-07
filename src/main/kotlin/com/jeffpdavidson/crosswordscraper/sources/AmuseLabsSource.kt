@@ -1,5 +1,6 @@
 package com.jeffpdavidson.crosswordscraper.sources
 
+import com.jeffpdavidson.crosswordscraper.Http
 import com.jeffpdavidson.crosswordscraper.Scraping
 import com.jeffpdavidson.crosswordscraper.sources.Source.Companion.hostIsDomainOrSubdomainOf
 import com.jeffpdavidson.kotwords.formats.PuzzleMe
@@ -34,9 +35,11 @@ object AmuseLabsSource : FixedHostSource() {
         )
         val puzzleRawc = Scraping.executeFunctionForString(tabId, frameId, scrapeFn)
         if (puzzleRawc.isNotEmpty()) {
-            val onReadyScrapeFn = js("function() { return window.onReady ? window.onReady.toString() : ''; }")
-            val onReadyFn = Scraping.executeFunctionForString(tabId, frameId, onReadyScrapeFn)
-            return ScrapeResult.Success(listOf(PuzzleMe.fromRawc(puzzleRawc, onReadyFn)))
+            val crosswordJsUrlFn =
+                js("""function() { return document.querySelector('script[src*="c-min.js"]').src; }""")
+            val crosswordJsUrl = Scraping.executeFunctionForString(tabId, frameId, crosswordJsUrlFn)
+            val crosswordJs = Http.fetchAsString(crosswordJsUrl)
+            return ScrapeResult.Success(listOf(PuzzleMe.fromRawc(puzzleRawc, crosswordJs)))
         }
         return ScrapeResult.Success(listOf())
     }

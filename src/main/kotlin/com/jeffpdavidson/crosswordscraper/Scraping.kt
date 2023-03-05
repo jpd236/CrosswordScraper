@@ -1,11 +1,11 @@
 package com.jeffpdavidson.crosswordscraper
 
+import browser.scripting.InjectionTarget
+import browser.scripting.ScriptInjection
 import browser.tabs.ExecuteScriptDetails
 import browser.tabs.QueryInfo
 import browser.webNavigation.Frame
 import browser.webNavigation.GetAllFramesDetails
-import browser.scripting.InjectionTarget
-import browser.scripting.ScriptInjection
 import kotlinx.coroutines.await
 import kotlin.js.Promise
 

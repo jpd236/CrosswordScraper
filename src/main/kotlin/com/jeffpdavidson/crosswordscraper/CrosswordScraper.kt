@@ -15,6 +15,7 @@ import com.jeffpdavidson.crosswordscraper.sources.TheWeekSource
 import com.jeffpdavidson.crosswordscraper.sources.UniversalSource
 import com.jeffpdavidson.crosswordscraper.sources.WallStreetJournalSource
 import com.jeffpdavidson.crosswordscraper.sources.WorldOfCrosswordsSource
+import com.jeffpdavidson.crosswordscraper.sources.XWordInfoSource
 import com.jeffpdavidson.kotwords.formats.Puzzleable
 import com.jeffpdavidson.kotwords.model.Puzzle
 import kotlinx.browser.document
@@ -72,6 +73,7 @@ object CrosswordScraper {
         UniversalSource,
         WallStreetJournalSource,
         WorldOfCrosswordsSource,
+        XWordInfoSource,
 
         // Prefer extracted puzzles from applets to .puz files, which tend to be more constrained.
         PuzzleLinkSource,

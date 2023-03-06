@@ -53,7 +53,7 @@ object Scraping {
         // variables (see https://developer.chrome.com/docs/extensions/mv3/content_scripts/). So we inject a script into
         // the DOM which inserts a hidden div with the value of the given command, and then read the div's contents from
         // the DOM.
-        val functionCode = "${function.toString().replace("\n", "").replace("'", "\\'")}()"
+        val functionCode = "${function.toString().replace("\n", "").replace("\\", "\\\\").replace("'", "\\'")}()"
         val divName = "CrosswordScraper-Command"
         val script = """
             var divElem = document.createElement('div');

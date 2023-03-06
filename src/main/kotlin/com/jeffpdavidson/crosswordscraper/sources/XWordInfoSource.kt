@@ -75,7 +75,7 @@ object XWordInfoSource : FixedHostSource() {
                     if (script === "") {
                         return "";
                     }
-                    var dataRegex = /Go\(({[^}]+})\);/
+                    var dataRegex = /Go\((\{[^}]+})\);/
                     var result = dataRegex.exec(script);
                     if (result === null) {
                         return "";

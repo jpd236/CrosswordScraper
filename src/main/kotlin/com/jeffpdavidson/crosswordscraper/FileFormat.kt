@@ -15,6 +15,7 @@ enum class FileFormat(
         { it.supportsAcrossLite() },
         { it.asAcrossLiteBinary(writeUtf8 = Settings.isPuzUnicodeSupportEnabled()) }),
     JPZ("jpz", { true }, { it.asJpzFile() }),
+    IPUZ("ipuz", { it.puzzleType == Puzzle.PuzzleType.CROSSWORD }, { it.asIpuzFile() }),
     PDF("pdf", { true }, {
         val fontFamily = if (Settings.getPdfFont() == "NotoSans") {
             PdfFonts.getNotoSansFontFamily()

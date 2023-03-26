@@ -4,7 +4,9 @@ import com.jeffpdavidson.crosswordscraper.Http
 import com.jeffpdavidson.crosswordscraper.Scraping
 import com.jeffpdavidson.crosswordscraper.sources.Source.Companion.hostIsDomainOrSubdomainOf
 import com.jeffpdavidson.kotwords.formats.AcrossLite
+import com.jeffpdavidson.kotwords.formats.Ipuz
 import com.jeffpdavidson.kotwords.formats.JpzFile
+import com.jeffpdavidson.kotwords.formats.Puzzleable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
@@ -18,10 +20,15 @@ object CrosswordNexusSource : FixedHostSource() {
     override fun matchesUrl(url: URL): Boolean = url.hostIsDomainOrSubdomainOf("crosswordnexus.com")
 
     private val PUZZLE_URL_REGEX = "url: '([^']*.)'".toRegex()
+    private val SUPPORTED_FORMATS: Map<String, (ByteArray) -> Puzzleable> = mapOf(
+        "puz" to { data -> AcrossLite(data) },
+        "jpz" to { data -> JpzFile(data) },
+        "ipuz" to { data -> Ipuz(data.decodeToString()) },
+    )
 
     override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult {
         // First, see if there's a puzzle URL in one of the query parameters.
-        val paramUrls = url.searchParams.values().filter { it.endsWith(".jpz") || it.endsWith(".puz") }
+        val paramUrls = url.searchParams.values().filter { SUPPORTED_FORMATS.contains(it.substringAfterLast('.')) }
         if (paramUrls.isNotEmpty()) {
             return scrapeUrls(url, paramUrls)
         }
@@ -56,12 +63,12 @@ object CrosswordNexusSource : FixedHostSource() {
 
         val fetchedUrls =
             urls.map { it to Http.fetchAsBinary(URL(it, baseUrl.toString()).toString()) }
-                .partition { it.first.endsWith(".jpz") }
+                .groupBy { it.first.substringAfterLast('.') }
         return ScrapeResult.Success(
-            puzzles = fetchedUrls.first.map {
-                JpzFile(it.second)
-            } + fetchedUrls.second.map {
-                AcrossLite(it.second)
+            puzzles = SUPPORTED_FORMATS.flatMap { (format, converterFn) ->
+                fetchedUrls.getOrElse(format) { listOf() }.map {
+                    converterFn.invoke(it.second)
+                }
             }
         )
     }

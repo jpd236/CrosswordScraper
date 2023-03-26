@@ -3,6 +3,8 @@ package com.jeffpdavidson.crosswordscraper.sources
 import com.jeffpdavidson.crosswordscraper.Http
 import com.jeffpdavidson.crosswordscraper.Scraping
 import com.jeffpdavidson.kotwords.formats.AcrossLite
+import com.jeffpdavidson.kotwords.formats.Ipuz
+import com.jeffpdavidson.kotwords.formats.JpzFile
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
@@ -21,12 +23,13 @@ object PuzzleLinkSource : Source {
             return ScrapeResult.Success(listOf())
         }
 
-        // Find all .puz links on the page.
+        // Find all potential puzzle links on the page. Note that the selector may return invalid links like
+        // http://puzzle.page/viewer.html?puzzle=my_puzzle.puz, so we filter these out later when we can parse the URL.
         val getUrlsCommand = js(
             """function() {
                 return JSON.stringify(
                     Array.from(
-                        window.document.querySelectorAll('a[href$=".puz"]').values()
+                        window.document.querySelectorAll('a:is([href$=".puz"],[href$=".jpz"],[href$=".ipuz"])').values()
                     ).map(function(elem) { return elem.href; })
                 );
             }"""
@@ -36,6 +39,7 @@ object PuzzleLinkSource : Source {
             .distinct()
             .map { URL(it) }
             .filter { setOf("http:", "https:").contains(it.protocol) }
+            .filter { it.pathname.contains(".(puz|jpz|ipuz)$".toRegex()) }
 
         // Determine and check all the permissions we'll need to download these puzzles.
         val neededPermissions = getPermissionsForUrls(puzzleUrls)
@@ -43,6 +47,15 @@ object PuzzleLinkSource : Source {
             return ScrapeResult.NeedPermissions(neededPermissions)
         }
 
-        return ScrapeResult.Success(puzzleUrls.map { AcrossLite(Http.fetchAsBinary(it.toString())) })
+        return ScrapeResult.Success(
+            puzzleUrls.map {
+                val urlString = it.toString()
+                when (urlString.substringAfterLast('.')) {
+                    "jpz" -> JpzFile(Http.fetchAsBinary(urlString))
+                    "ipuz" -> Ipuz(Http.fetchAsString(urlString))
+                    else -> AcrossLite(Http.fetchAsBinary(urlString))
+                }
+            }
+        )
     }
 }

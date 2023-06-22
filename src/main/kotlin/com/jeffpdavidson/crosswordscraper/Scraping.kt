@@ -1,8 +1,5 @@
 package com.jeffpdavidson.crosswordscraper
 
-import browser.scripting.InjectionTarget
-import browser.scripting.ScriptInjection
-import browser.tabs.ExecuteScriptDetails
 import browser.tabs.QueryInfo
 import browser.webNavigation.Frame
 import browser.webNavigation.GetAllFramesDetails
@@ -40,55 +37,11 @@ object Scraping {
      * @return the result of the function
      */
     suspend fun executeFunctionForString(tabId: Int, frameId: Int, function: dynamic): String {
-        return when (val manifestVersion = browser.runtime.getManifest().manifest_version) {
-            2 -> executeFunctionForStringV2(frameId, function)
-            3 -> executeFunctionForStringV3(tabId, frameId, function)
-            else -> throw IllegalStateException("Unknown manifest version $manifestVersion")
-        }.await()
-    }
-
-    private fun executeFunctionForStringV2(frameId: Int, function: dynamic): Promise<String> {
-        // The popup runs in an isolated context from the scraped frame, so we first need to inject a script to access
-        // the frame. In addition, since the script runs in an isolated context, it can only access the DOM and not any
-        // variables (see https://developer.chrome.com/docs/extensions/mv3/content_scripts/). So we inject a script into
-        // the DOM which inserts a hidden div with the value of the given command, and then read the div's contents from
-        // the DOM.
-        val functionCode = "${function.toString().replace("\n", "").replace("\\", "\\\\").replace("'", "\\'")}()"
-        val divName = "CrosswordScraper-Command"
-        val script = """
-            var divElem = document.createElement('div');
-            divElem.setAttribute('id', '$divName');
-            divElem.style.display = 'none';
-            document.body.appendChild(divElem);
-            var scriptElem = document.createElement('script');
-            scriptElem.innerHTML = 'document.getElementById("$divName").textContent = $functionCode';
-            document.body.appendChild(scriptElem);
-            var data = divElem.textContent;
-            document.body.removeChild(scriptElem);
-            document.body.removeChild(divElem);
-            data;
-        """.trimIndent()
-        return browser.tabs.executeScript(
-            details = ExecuteScriptDetails {
-                this.frameId = frameId
-                code = script
-            }
-        ).then {
-            it[0] as String
-        }
-    }
-
-    private fun executeFunctionForStringV3(tabId: Int, frameId: Int, function: dynamic): Promise<String> {
-        val injection = ScriptInjection {
-            target = InjectionTarget {
-                this.tabId = tabId
-                frameIds = arrayOf(frameId)
-            }
-            func = function
-            world = "MAIN"
-        }
-        return browser.scripting.executeScript(injection).then {
-            it[0].result as String
-        }
+        // TODO(#4): Move back to native implementation once Firefox supports v3. For now, we need this in Javascript so
+        // we can strip out the Firefox implementation when building for Chrome, which uses a method that is banned by
+        // Chrome in v3 extensions.
+        return browserExecuteFunctionForString(tabId, frameId, function).await()
     }
 }
+
+external fun browserExecuteFunctionForString(tabId: Int, frameId: Int, function: dynamic): Promise<String>

@@ -76,6 +76,7 @@ tasks {
         val copyResources = register<Copy>("copy${variantName.capitalize()}Resources") {
             from("src/main/resources")
             exclude("manifest.json")
+            exclude("browser-js/")
             into(extensionFolder)
         }
 
@@ -118,6 +119,11 @@ tasks {
             }
             from("build/js/node_modules/webextension-polyfill/dist") {
                 include("browser-polyfill.min.js")
+                into("js")
+            }
+            from("src/main/resources/browser-js") {
+                include("$browser.js")
+                rename { "browser.js" }
                 into("js")
             }
             into(extensionFolder)

@@ -1,12 +1,12 @@
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 plugins {
-    kotlin("js") version "1.8.10"
-    kotlin("plugin.serialization") version "1.8.10"
+    kotlin("js") version "1.8.22"
+    kotlin("plugin.serialization") version "1.8.22"
 }
 
 group = "com.jeffpdavidson"
-version = "1.3.4-SNAPSHOT"
+version = "1.3.4"
 
 repositories {
     mavenCentral()
@@ -20,7 +20,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
     implementation("com.github.ajalt.colormath:colormath:3.2.1")
 
-    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.3.3")
+    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.3.4")
 
     runtimeOnly(npm("webextension-polyfill", "0.10.0"))
     runtimeOnly(npm("jquery", "3.6.3"))

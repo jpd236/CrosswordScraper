@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.jeffpdavidson"
-version = "1.3.6-SNAPSHOT"
+version = "1.3.6"
 
 repositories {
     mavenCentral()
@@ -20,7 +20,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
     implementation("com.github.ajalt.colormath:colormath:3.2.1")
 
-    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.3.5")
+    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.3.6")
 
     runtimeOnly(npm("webextension-polyfill", "0.10.0"))
     runtimeOnly(npm("jquery", "3.6.3"))

@@ -7,16 +7,21 @@ import org.w3c.dom.url.URL
 object UniversalSource : FixedHostSource() {
 
     override val sourceName: String = "Universal Uclick"
-    override fun neededHostPermissions(url: URL) = listOf("https://*.universaluclick.com/*")
 
-    override fun matchesUrl(url: URL): Boolean {
-        return url.host == "embed.universaluclick.com"
-    }
+    private val hostToNeededPermissionMap = mapOf(
+        "embed.universaluclick.com" to "https://*.universaluclick.com/*",
+        "securegames.iwin.com" to "https://*.iwin.com/*",
+    )
+
+    override fun neededHostPermissions(url: URL): List<String> =
+        listOf(hostToNeededPermissionMap[url.host] ?: throw UnsupportedOperationException("Unknown URL: $url"))
+
+    override fun matchesUrl(url: URL): Boolean = url.host in hostToNeededPermissionMap.keys
 
     override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult {
         val scrapeFn = js(
             """function() {
-                return window.crossword.jsonData ? JSON.stringify(window.crossword.jsonData) : '';
+                return window.crossword && window.crossword.jsonData ? JSON.stringify(window.crossword.jsonData) : '';
             }"""
         )
         val puzzleJson = Scraping.executeFunctionForString(tabId, frameId, scrapeFn)

@@ -1,6 +1,7 @@
 package com.jeffpdavidson.crosswordscraper.sources
 
 import com.jeffpdavidson.crosswordscraper.Scraping
+import com.jeffpdavidson.crosswordscraper.sources.Source.Companion.hostIsDomainOrSubdomainOf
 import com.jeffpdavidson.kotwords.formats.WallStreetJournal
 import com.jeffpdavidson.kotwords.formats.WallStreetJournalAcrostic
 import org.w3c.dom.url.URL
@@ -11,7 +12,7 @@ object WallStreetJournalSource : FixedHostSource() {
     override fun neededHostPermissions(url: URL) = listOf("https://*.wsj.com/*", "https://s3.amazonaws.com/*")
 
     override fun matchesUrl(url: URL): Boolean {
-        return (url.host == "wsj.com" || url.host.endsWith(".wsj.com") || url.host == "s3.amazonaws.com")
+        return (url.hostIsDomainOrSubdomainOf("wsj.com") || url.host == "s3.amazonaws.com")
                 && url.pathname.contains("/puzzles/crossword/")
     }
 

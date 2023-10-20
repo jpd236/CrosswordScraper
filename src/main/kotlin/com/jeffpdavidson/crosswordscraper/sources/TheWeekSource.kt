@@ -21,10 +21,12 @@ object TheWeekSource : FixedHostSource() {
         val scrapeFn = js("function() { return window.xrPuzUrl ? JSON.stringify(window.xrPuzUrl) : ''; }")
         val puzzleUrl = Scraping.executeFunctionForString(tabId, frameId, scrapeFn)
         if (puzzleUrl.isNotEmpty()) {
-            if (!hasPermissions(neededHostPermissions(url))) {
-                return ScrapeResult.NeedPermissions(neededHostPermissions(url))
+            val downloadUrl = URL(puzzleUrl.trim('"'), url.toString())
+            val permissions = getPermissionsForUrls(listOf(downloadUrl))
+            if (!hasPermissions(permissions)) {
+                return ScrapeResult.NeedPermissions(permissions)
             }
-            return ScrapeResult.Success(listOf(AcrossLite(Http.fetchAsBinary("${url.origin}${puzzleUrl.trim('"')}"))))
+            return ScrapeResult.Success(listOf(AcrossLite(Http.fetchAsBinary(downloadUrl.toString()))))
         }
         return ScrapeResult.Success(listOf())
     }

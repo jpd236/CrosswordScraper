@@ -8,7 +8,8 @@ import org.w3c.dom.url.URL
 object TheWeekSource : FixedHostSource() {
 
     override val sourceName: String = "The Week"
-    override fun neededHostPermissions(url: URL) = listOf("https://*.theweek.com/*")
+    override fun neededHostPermissions(url: URL) =
+        listOf("https://*.theweek.com/*", "https://*.futurecdn.net/*")
 
     override fun matchesUrl(url: URL): Boolean {
         return url.host == "theweek.com"

@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
-
 plugins {
     kotlin("multiplatform") version "1.9.10"
     kotlin("plugin.serialization") version "1.9.10"
@@ -44,12 +42,6 @@ kotlin {
                 runtimeOnly(npm("bootstrap", "5.3.2"))
             }
         }
-
-        val jsTest by getting {
-            dependencies {
-                implementation(kotlin("test-js"))
-            }
-        }
     }
 }
 
@@ -76,13 +68,19 @@ tasks {
         val variantName = "$env${browser.capitalizeAscii()}"
         val extensionFolder = "build/extension/$variantName"
 
-        val browserWebpackTask = getByName("jsBrowser${env.capitalizeAscii()}Webpack", KotlinWebpack::class)
+        // TODO: This seems more complex than it should be.
+        // Depending on the WebPack tasks fails in production because it thinks the output belongs to the
+        // distribution task, but the distribution task is named inconsistently and not strongly typed.
+        val distributionTaskName = when (env) {
+            development -> "DevelopmentExecutableDistribution"
+            production -> "Distribution"
+            else -> throw IllegalArgumentException("Unknown environment $env")
+        }
+        val browserDistributionTask = getByName("jsBrowser$distributionTaskName")
 
         val copyBundleFile = register<Copy>("copy${variantName.capitalizeAscii()}BundleFile") {
-            dependsOn(browserWebpackTask)
-            from(browserWebpackTask.outputDirectory) {
-                include("*.js")
-            }
+            dependsOn(browserDistributionTask)
+            from(browserDistributionTask.outputs.files.singleFile)
             into("$extensionFolder/js")
         }
 
@@ -103,13 +101,15 @@ tasks {
                         .replace("{ACTION_KEY}", "browser_action")
                         .replace("{PERMISSIONS}", "")
                         .replace("{OPTIONAL_HOST_PERMISSION_KEY}", "optional_permissions")
-                        .replace("{BROWSER_SPECIFIC_SETTINGS}",
+                        .replace(
+                            "{BROWSER_SPECIFIC_SETTINGS}",
                             """"browser_specific_settings": {
                                 "gecko": {
                                    "id": "{d48182db-7419-4305-8f09-e886fbd4d74d}"
                                 }
                             }
-                            """.trimIndent())
+                            """.trimIndent()
+                        )
                 }
                 chrome -> filter { line ->
                     line.replace("{MANIFEST_VERSION}", "3")

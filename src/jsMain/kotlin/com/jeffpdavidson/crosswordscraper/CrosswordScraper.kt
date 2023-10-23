@@ -201,7 +201,7 @@ object CrosswordScraper {
         debugLog.appendLine("Browser: ${window.navigator.userAgent}")
 
         val (tabId, frames) = Scraping.getAllFrames()
-        debugLog.appendLine("URL: ${frames.first { it.parentFrameId == -1 }.url}")
+        debugLog.appendLine("URL: ${frames.firstOrNull { it.parentFrameId == -1 }?.url ?: "<unknown>"}")
 
         val puzzles = mutableSetOf<ProcessedScrapeResult>()
         val processedGrids = mutableListOf<List<List<Puzzle.Cell>>>()
@@ -385,7 +385,6 @@ object CrosswordScraper {
 
     private fun HtmlBlockTag.renderScrapeError(scrapedPuzzle: ProcessedScrapeResult.Error) {
         classes = classes + "disabled"
-        style = "pointer-events: auto;"
         div(classes = "mb-1") {
             +scrapedPuzzle.source
         }
@@ -439,7 +438,7 @@ object CrosswordScraper {
                             }
                             div("modal-footer") {
                                 button(type = ButtonType.button, classes = "btn btn-secondary") {
-                                    attributes["data-dismiss"] = "modal"
+                                    attributes["data-bs-dismiss"] = "modal"
                                     +"Close"
                                 }
                             }
@@ -451,14 +450,13 @@ object CrosswordScraper {
             val errorMessageElement = document.getElementById("error-message") as HTMLParagraphElement
             errorMessageElement.innerText = message
         }
-        val modal = js("$('#error-dialog')")
-        modal.modal("show")
+        js("new bootstrap.Modal('#error-dialog').show()")
     }
 
     /** Initiate a user download of the given data. */
     private suspend fun startDownload(fileName: String, data: ByteArray) {
         val reader = FileReader()
-        suspendCoroutine<Unit> { cont ->
+        suspendCoroutine { cont ->
             reader.onload = { event ->
                 val link = document.createElement("a") as HTMLAnchorElement
                 link.download = fileName

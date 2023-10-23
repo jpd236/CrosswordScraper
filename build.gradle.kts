@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 plugins {
-    kotlin("js") version "1.8.22"
-    kotlin("plugin.serialization") version "1.8.22"
+    kotlin("multiplatform") version "1.9.10"
+    kotlin("plugin.serialization") version "1.9.10"
 }
 
 group = "com.jeffpdavidson"
@@ -11,34 +11,45 @@ version = "1.3.10-SNAPSHOT"
 repositories {
     mavenCentral()
     // TODO: Remove ahead of public release.
-    // maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
-}
-
-dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:1.6.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.8.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
-    implementation("com.github.ajalt.colormath:colormath:3.2.1")
-
-    implementation("com.jeffpdavidson.kotwords:kotwords-js:1.3.9")
-
-    runtimeOnly(npm("webextension-polyfill", "0.10.0"))
-    runtimeOnly(npm("jquery", "3.6.3"))
-    runtimeOnly(npm("bootstrap", "4.6.2"))
-
-    testImplementation(kotlin("test-js"))
+    maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
 }
 
 kotlin {
     js(IR) {
         browser {
-            webpackTask {
+            webpackTask(Action {
                 // The default devtool uses eval(), which is forbidden in extensions. And we inline the map so we don't
                 // need to configure the extension to load additional resources for the map.
                 devtool = org.jetbrains.kotlin.gradle.targets.js.webpack.WebpackDevtool.INLINE_CHEAP_MODULE_SOURCE_MAP
-            }
+            })
         }
         binaries.executable()
+    }
+
+    @Suppress("UNUSED_VARIABLE") // https://youtrack.jetbrains.com/issue/KT-38871
+    sourceSets {
+        val jsMain by getting {
+            dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:1.7.3")
+                implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.9.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-js:1.6.0")
+                implementation("com.github.ajalt.colormath:colormath-js:3.3.3")
+
+                implementation("com.jeffpdavidson.kotwords:kotwords-js:1.3.10-SNAPSHOT")
+
+                // TODO: Migrate to kotlinx-datetime if parsing/formatting support is added.
+                implementation("com.soywiz.korlibs.klock:klock-js:4.0.10")
+
+                runtimeOnly(npm("webextension-polyfill", "0.10.0"))
+                runtimeOnly(npm("bootstrap", "5.3.2"))
+            }
+        }
+
+        val jsTest by getting {
+            dependencies {
+                implementation(kotlin("test-js"))
+            }
+        }
     }
 }
 
@@ -59,29 +70,31 @@ tasks {
         }
     }
 
+    fun String.capitalizeAscii() = replaceFirstChar(Char::titlecase)
+
     val tasks = variants.associateWith { (env, browser) ->
-        val variantName = "$env${browser.capitalize()}"
+        val variantName = "$env${browser.capitalizeAscii()}"
         val extensionFolder = "build/extension/$variantName"
 
-        val browserWebpackTask = getByName("browser${env.capitalize()}Webpack", KotlinWebpack::class)
+        val browserWebpackTask = getByName("jsBrowser${env.capitalizeAscii()}Webpack", KotlinWebpack::class)
 
-        val copyBundleFile = register<Copy>("copy${variantName.capitalize()}BundleFile") {
+        val copyBundleFile = register<Copy>("copy${variantName.capitalizeAscii()}BundleFile") {
             dependsOn(browserWebpackTask)
-            from(browserWebpackTask.destinationDirectory) {
+            from(browserWebpackTask.outputDirectory) {
                 include("*.js")
             }
             into("$extensionFolder/js")
         }
 
-        val copyResources = register<Copy>("copy${variantName.capitalize()}Resources") {
-            from("src/main/resources")
+        val copyResources = register<Copy>("copy${variantName.capitalizeAscii()}Resources") {
+            from("src/jsMain/resources")
             exclude("manifest.json")
             exclude("browser-js/")
             into(extensionFolder)
         }
 
-        val copyManifest = register<Copy>("copy${variantName.capitalize()}Manifest") {
-            from("src/main/resources/manifest.json")
+        val copyManifest = register<Copy>("copy${variantName.capitalizeAscii()}Manifest") {
+            from("src/jsMain/resources/manifest.json")
             into(extensionFolder)
             // Replace placeholders in manifest.json based on the browser.
             when (browser) {
@@ -108,11 +121,7 @@ tasks {
             }
         }
 
-        val copyJsDeps = register<Copy>("copy${variantName.capitalize()}JsDeps") {
-            from("build/js/node_modules/jquery/dist") {
-                include("jquery.slim.min.js")
-                into("js")
-            }
+        val copyJsDeps = register<Copy>("copy${variantName.capitalizeAscii()}JsDeps") {
             from("build/js/node_modules/bootstrap/dist") {
                 include("css/bootstrap.min.css")
                 include("js/bootstrap.bundle.min.js")
@@ -121,7 +130,7 @@ tasks {
                 include("browser-polyfill.min.js")
                 into("js")
             }
-            from("src/main/resources/browser-js") {
+            from("src/jsMain/resources/browser-js") {
                 include("$browser.js")
                 rename { "browser.js" }
                 into("js")

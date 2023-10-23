@@ -5,11 +5,10 @@ import com.jeffpdavidson.crosswordscraper.Scraping
 import com.jeffpdavidson.crosswordscraper.sources.Source.Companion.hostIsDomainOrSubdomainOf
 import com.jeffpdavidson.kotwords.formats.UclickJpz
 import com.jeffpdavidson.kotwords.formats.UclickXml
-import com.soywiz.klock.DateFormat
-import com.soywiz.klock.DateTime
-import com.soywiz.klock.parseDate
+import korlibs.time.DateFormat
+import korlibs.time.DateTime
+import korlibs.time.parseDate
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.w3c.dom.parsing.DOMParser
 import org.w3c.dom.url.URL

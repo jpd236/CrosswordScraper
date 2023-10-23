@@ -8,6 +8,7 @@ import org.w3c.dom.url.URL
 object PzzlSource : FixedHostSource() {
 
     private data class PzzlSourceInfo(val hostPermission: String, val baseUrl: String)
+
     private val NYT_SOURCE = PzzlSourceInfo(
         hostPermission = "https://*.pzzl.com/*",
         baseUrl = "https://nytsyn.pzzl.com/nytsyn-crossword-mh/nytsyncrossword",

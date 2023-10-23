@@ -62,7 +62,7 @@ object Settings {
             h4 {
                 +"Automatic Download"
             }
-            div("form-group") {
+            div("mb-3") {
                 div("form-check") {
                     input(type = InputType.checkBox, classes = "form-check-input") {
                         id = ID_AUTO_DOWNLOAD
@@ -80,12 +80,12 @@ object Settings {
                             "download that puzzle and close the scraper dialog.")
                 }
             }
-            div("form-group") {
+            div("mb-3") {
                 label {
                     htmlFor = ID_AUTO_DOWNLOAD_FORMAT
                     +"Format"
                 }
-                select("form-control") {
+                select("form-select") {
                     id = ID_AUTO_DOWNLOAD_FORMAT
                     style = "max-width: 100px;"
                     FileFormat.values().forEach { format ->
@@ -106,7 +106,7 @@ object Settings {
             h4 {
                 +"PUZ"
             }
-            div("form-group") {
+            div("mb-3") {
                 div("form-check") {
                     input(type = InputType.checkBox, classes = "form-check-input") {
                         id = ID_PUZ_UNICODE_SUPPORT
@@ -127,13 +127,13 @@ object Settings {
             h4 {
                 +"PDF"
             }
-            div("form-group") {
+            div("mb-3") {
                 label {
                     htmlFor = ID_PDF_INK_SAVER_PERCENTAGE
                     +"Ink Saver percentage"
                 }
                 div("d-flex align-items-center") {
-                    input(type = InputType.range, classes = "custom-range") {
+                    input(type = InputType.range, classes = "form-range") {
                         id = ID_PDF_INK_SAVER_PERCENTAGE
                         style = "max-width: 300px;"
                         onInputFunction = {
@@ -143,11 +143,11 @@ object Settings {
                             setPdfInkSaverPercentage(pdfInkSaverPercentageInput.value.toInt())
                         }
                     }
-                    div("ml-2 border d-block") {
+                    div("ms-2 border d-block") {
                         id = ID_PDF_INK_SAVER_PERCENTAGE_SQUARE
                         style = "width: 1.5em; height: 1.5em; border-color: black !important;"
                     }
-                    span("ml-2") {
+                    span("ms-2") {
                         id = ID_PDF_INK_SAVER_PERCENTAGE_TEXT
                     }
                 }
@@ -155,12 +155,12 @@ object Settings {
                     +"Percentage to lighten black squares. 0% is pure black; 100% is pure white."
                 }
             }
-            div("form-group") {
+            div("mb-3") {
                 label {
                     htmlFor = ID_PDF_FONT
                     +"Font"
                 }
-                select("form-control") {
+                select("form-select") {
                     id = ID_PDF_FONT
                     style = "max-width: 300px;"
                     option {

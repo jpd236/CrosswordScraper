@@ -80,7 +80,9 @@ tasks {
 
         val copyBundleFile = register<Copy>("copy${variantName.capitalizeAscii()}BundleFile") {
             dependsOn(browserDistributionTask)
-            from(browserDistributionTask.outputs.files.singleFile)
+            from(browserDistributionTask.outputs.files.singleFile) {
+                include("*.js")
+            }
             into("$extensionFolder/js")
         }
 

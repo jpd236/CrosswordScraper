@@ -4,12 +4,12 @@ plugins {
 }
 
 group = "com.jeffpdavidson"
-version = "1.3.10-SNAPSHOT"
+version = "1.3.10"
 
 repositories {
     mavenCentral()
     // TODO: Remove ahead of public release.
-    maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
+    // maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/") }
 }
 
 kotlin {
@@ -33,7 +33,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-js:1.6.0")
                 implementation("com.github.ajalt.colormath:colormath-js:3.3.3")
 
-                implementation("com.jeffpdavidson.kotwords:kotwords-js:1.3.10-SNAPSHOT")
+                implementation("com.jeffpdavidson.kotwords:kotwords-js:1.3.10")
 
                 // TODO: Migrate to kotlinx-datetime if parsing/formatting support is added.
                 implementation("com.soywiz.korlibs.klock:klock-js:4.0.10")

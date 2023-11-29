@@ -28,7 +28,7 @@ object PzzlSource : FixedHostSource() {
     }
 
     private fun getSourceInfo(url: URL): PzzlSourceInfo? {
-        if (url.host == "nytsyn.pzzl.com" && url.pathname == "/cwd/") {
+        if (url.host == "nytsyn.pzzl.com" && url.pathname.matches("/cwd[^/]*/".toRegex())) {
             return NYT_SOURCE
         }
         if (url.hostIsDomainOrSubdomainOf("brainsonly.com") && url.pathname == "/global/newsday/cwd/") {

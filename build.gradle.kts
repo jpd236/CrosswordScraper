@@ -107,7 +107,7 @@ tasks {
                             "{BROWSER_SPECIFIC_SETTINGS}",
                             """"browser_specific_settings": {
                                 "gecko": {
-                                   "id": "{d48182db-7419-4305-8f09-e886fbd4d74d}"
+                                  "id": "{d48182db-7419-4305-8f09-e886fbd4d74d}"
                                 }
                             }
                             """.trimIndent()

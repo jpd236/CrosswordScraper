@@ -16,22 +16,59 @@ function browserExecuteFunctionForString(tabId, frameId, fn) {
     // the DOM which inserts a hidden div with the value of the given command, and then read the div's contents from
     // the DOM.
     var functionCode = fn.toString().replaceAll("\n", "").replaceAll("\\", "\\\\").replaceAll("'", "\\'") + "()";
-    var divName = "CrosswordScraper-Command";
+    var divName = "CrosswordScraper-Output";
+    var scriptName = "CrosswordScraper-Script";
+    var outputPlaceholder = "__OUTPUT_PLACEHOLDER__";
     var script = "var divElem = document.createElement('div');\n" +
         "divElem.setAttribute('id', '" + divName + "');\n" +
         "divElem.style.display = 'none';\n" +
+        "divElem.textContent = '" + outputPlaceholder + "';\n" +
         "document.body.appendChild(divElem);\n" +
+        // Due to https://bugzilla.mozilla.org/show_bug.cgi?id=1267027, if a website sets a Content-Security-Policy,
+        // it will block this injected script from executing if the script code is embedded directly on the page. As a
+        // workaround, we can put it behind a blob: URL.
         "var scriptElem = document.createElement('script');\n" +
-        "scriptElem.innerHTML = 'document.getElementById(\"" + divName + "\").textContent = " + functionCode + "';\n" +
+        "scriptElem.setAttribute('id', '" + scriptName + "');\n" +
+        "var scriptText = 'document.getElementById(\"" + divName + "\").textContent = " + functionCode + "';\n" +
+        "var scriptBlob = new Blob([decodeURIComponent(scriptText)], {type: 'text/javascript'});\n" +
+        "var scriptUrl = URL.createObjectURL(scriptBlob);\n" +
+        "scriptElem.src = scriptUrl;\n" +
         "document.body.appendChild(scriptElem);\n" +
-        "var data = divElem.textContent;\n" +
-        "document.body.removeChild(scriptElem);\n" +
-        "document.body.removeChild(divElem);\n" +
-        "data;";
-    return browser.tabs.executeScript(
+        "null";
+    return (browser.tabs.executeScript(
         {
             frameId: frameId,
             code: script
         }
-    ).then(executeResult => executeResult[0]);
+    ))
+    // Unlike direct addition of a text script, using a blob: URL does not immediately run the script. So we poll every
+    // 25ms until the placeholder in the div has been replaced, indicating that the script is finished.
+    // TODO: Is there a better way to do this via message passing? It seems like we should be able to use
+    // window.postMessage and window.addEventListener to send/receive messages between our injected script and the
+    // extension, but they seem to be getting dropped. Better yet, whenever Firefox supports the MAIN context in
+    // browser.scripting.executeScript, we can just use that and unify implementations with Chrome.
+    .then(async function(executeResult) {
+        var data = outputPlaceholder;
+        var fetchAndCleanupScript =
+            "var divElem = document.getElementById('" + divName + "');" +
+            "var scriptElem = document.getElementById('" + scriptName + "');" +
+            "var data = divElem.textContent;\n" +
+            "if (data !== '" + outputPlaceholder + "') {\n" +
+            "    URL.revokeObjectURL(scriptElem.src);\n" +
+            "    document.body.removeChild(scriptElem);\n" +
+            "    document.body.removeChild(divElem);\n" +
+            "}\n" +
+            "data;";
+        while (data === outputPlaceholder) {
+            await new Promise((resolve) => setTimeout(resolve, 25));
+            var result = await browser.tabs.executeScript(
+                {
+                    frameId: frameId,
+                    code: fetchAndCleanupScript
+                }
+            );
+            data = result[0];
+        }
+        return data;
+    });
 }

@@ -1,5 +1,5 @@
 # Crossword Scraper
-[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/jpd236/CrosswordScraper/gradle-build.yaml?branch=master)](https://github.com/jpd236/CrosswordScraper/actions/workflows/gradle-build.yaml)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/jpd236/CrosswordScraper/gradle-build.yaml?branch=main)](https://github.com/jpd236/CrosswordScraper/actions/workflows/gradle-build.yaml)
 
 Browser extension which downloads crosswords from crossword applets for offline solving.
 

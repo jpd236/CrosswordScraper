@@ -37,10 +37,7 @@ object PuzzleSocietySource : FixedHostSource() {
             }"""
         )
         val dataJson = Scraping.executeFunctionForString(tabId, frameId, scrapeFn)
-        if (dataJson.isEmpty()) {
-            return ScrapeResult.Error("No data found on current page")
-        }
-        var data = getDataIfMatching(dataJson, url)
+        var data = if (dataJson.isEmpty()) null else getDataIfMatching(dataJson, url)
         if (data == null) {
             // Data doesn't match, so fetch the current page and read the embedded __NEXT_DATA__ initializer script.
             val urlPermissions = neededHostPermissions(url) + getPermissionsForUrls(listOf(url))
@@ -52,12 +49,14 @@ object PuzzleSocietySource : FixedHostSource() {
             val document = parser.parseFromString(html, "text/html")
             val nextDataJson = document.getElementById("__NEXT_DATA__")?.textContent ?: ""
             if (nextDataJson.isEmpty()) {
-                return ScrapeResult.Error("No data found on refetched page")
+                // No data on refetched page - nothing more to try. Assume there's no puzzle here.
+                return ScrapeResult.Success()
             }
             data = getDataIfMatching(nextDataJson, url)
         }
-        if (data == null) {
-            return ScrapeResult.Error("No matching data found")
+        if (data == null || data.props.pageProps.gameContent.gameLevelDataSets.isEmpty()) {
+            // If there's no gameContent, assume there's no puzzle here.
+            return ScrapeResult.Success()
         }
         val levelData = data.props.pageProps.gameContent.gameLevelDataSets[0]
         val dateText = levelData.issueDate
@@ -90,7 +89,8 @@ object PuzzleSocietySource : FixedHostSource() {
     private fun getDataIfMatching(dataJson: String, url: URL): Data? {
         val data = JSON.decodeFromString<Data>(dataJson)
         val pathParts = url.pathname.split("/")
-        return if (pathParts.size > data.query.game.size &&
+        return if (data.query.game.isNotEmpty() &&
+            pathParts.size > data.query.game.size &&
             data.query.game == pathParts.subList(pathParts.size - data.query.game.size, pathParts.size)
         ) data else null
     }
@@ -103,9 +103,9 @@ object PuzzleSocietySource : FixedHostSource() {
         @Serializable
         data class Props(val pageProps: PageProps) {
             @Serializable
-            data class PageProps(val gameContent: GameContent) {
+            data class PageProps(val gameContent: GameContent = GameContent()) {
                 @Serializable
-                data class GameContent(val gameLevelDataSets: List<LevelData>) {
+                data class GameContent(val gameLevelDataSets: List<LevelData> = listOf()) {
                     @Serializable
                     data class LevelData(
                         val issueDate: String,
@@ -122,6 +122,6 @@ object PuzzleSocietySource : FixedHostSource() {
         }
 
         @Serializable
-        data class Query(val game: List<String>)
+        data class Query(val game: List<String> = listOf())
     }
 }

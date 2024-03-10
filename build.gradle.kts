@@ -108,6 +108,10 @@ tasks {
                             """"browser_specific_settings": {
                                 "gecko": {
                                   "id": "{d48182db-7419-4305-8f09-e886fbd4d74d}"
+                                },
+                                "gecko_android": {
+                                  "id": "{d48182db-7419-4305-8f09-e886fbd4d74d}",
+                                  "strict_min_version": "124.0"
                                 }
                             }
                             """.trimIndent()

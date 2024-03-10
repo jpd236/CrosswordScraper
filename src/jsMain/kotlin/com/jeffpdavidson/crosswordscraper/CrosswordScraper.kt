@@ -19,6 +19,7 @@ import com.jeffpdavidson.crosswordscraper.sources.WorldOfCrosswordsSource
 import com.jeffpdavidson.crosswordscraper.sources.XWordInfoSource
 import com.jeffpdavidson.kotwords.formats.Puzzleable
 import com.jeffpdavidson.kotwords.model.Puzzle
+import isFirefoxForAndroid
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
@@ -120,12 +121,24 @@ object CrosswordScraper {
                     }
                 }
             }
-            button(classes = "btn btn-secondary btn-sm mt-3") {
-                +"Settings"
-                onClickFunction = {
-                    browser.runtime.openOptionsPage()
+            if (isFirefoxForAndroid()) {
+                // Open the options page as a regular link on Firefox for Android. Otherwise, it is opened under the
+                // popup, so no one would notice it is there until the popup is closed:
+                // https://bugzilla.mozilla.org/show_bug.cgi?id=1884550
+                a(classes = "btn btn-secondary btn-sm mt-3") {
+                    +"Settings"
+                    href = getURL("options.html")
+                    target = "_blank"
+                }
+            } else {
+                button(classes = "btn btn-secondary btn-sm mt-3") {
+                    +"Settings"
+                    onClickFunction = {
+                        browser.runtime.openOptionsPage()
+                    }
                 }
             }
+
             hr { }
             div(classes = "text-muted") {
                 style = "font-size: 0.7rem"

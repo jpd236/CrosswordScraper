@@ -9,7 +9,7 @@ import org.w3c.dom.url.URL
 
 object CrosshareSource : FixedHostSource() {
 
-    private val PUZZLE_ID_PATTERN = "crosswords/([^/]+)".toRegex()
+    private val PUZZLE_ID_PATTERN = "(?:crosswords|embed)/([^/]+)".toRegex()
 
     override val sourceName = "Crosshare"
     override fun neededHostPermissions(url: URL) = listOf("https://*.crosshare.org/*")
@@ -33,8 +33,12 @@ object CrosshareSource : FixedHostSource() {
             try {
                 val crosshare = Crosshare(puzzleJson)
                 val puzzle = crosshare.asPuzzle()
-                // Make sure the puzzle title matches the page title - otherwise, this data is probably for a different
-                // puzzle.
+                // For the main Crosshare site, make sure the puzzle title matches the page title - otherwise, this data
+                // is probably for a different puzzle. For embeds, we don't need to do this since there is no navigation
+                // to different puzzles.
+                if (url.pathname.contains("/embed/")) {
+                    return ScrapeResult.Success(listOf(crosshare))
+                }
                 val titleFn = js("function() { return document.title; }")
                 val pageTitle = Scraping.executeFunctionForString(tabId, frameId, titleFn)
                 if (pageTitle.startsWith(puzzle.title)) {

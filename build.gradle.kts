@@ -1,10 +1,10 @@
 plugins {
-    kotlin("multiplatform") version "1.9.10"
-    kotlin("plugin.serialization") version "1.9.10"
+    kotlin("multiplatform") version "1.9.22"
+    kotlin("plugin.serialization") version "1.9.22"
 }
 
 group = "com.jeffpdavidson"
-version = "1.3.15"
+version = "1.3.16"
 
 repositories {
     mavenCentral()
@@ -24,16 +24,15 @@ kotlin {
         binaries.executable()
     }
 
-    @Suppress("UNUSED_VARIABLE") // https://youtrack.jetbrains.com/issue/KT-38871
     sourceSets {
         val jsMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:1.7.3")
-                implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.9.1")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-js:1.6.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-js:1.8.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.10.1")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-js:1.6.2")
                 implementation("com.github.ajalt.colormath:colormath-js:3.3.3")
 
-                implementation("com.jeffpdavidson.kotwords:kotwords-js:1.3.13")
+                implementation("com.jeffpdavidson.kotwords:kotwords-js:1.4.0")
 
                 // TODO: Migrate to kotlinx-datetime if parsing/formatting support is added.
                 implementation("com.soywiz.korlibs.klock:klock-js:4.0.10")

@@ -4,9 +4,11 @@ import browser.permissions.Permissions
 import browser.runtime.getURL
 import com.jeffpdavidson.crosswordscraper.sources.AmuseLabsSource
 import com.jeffpdavidson.crosswordscraper.sources.BostonGlobeSource
+import com.jeffpdavidson.crosswordscraper.sources.CnnSource
 import com.jeffpdavidson.crosswordscraper.sources.CrosshareSource
 import com.jeffpdavidson.crosswordscraper.sources.CrosswordCompilerSource
 import com.jeffpdavidson.crosswordscraper.sources.CrosswordNexusSource
+import com.jeffpdavidson.crosswordscraper.sources.CrosswordrSource
 import com.jeffpdavidson.crosswordscraper.sources.GuardianSource
 import com.jeffpdavidson.crosswordscraper.sources.NewYorkTimesSource
 import com.jeffpdavidson.crosswordscraper.sources.PuzzleLinkSource
@@ -67,9 +69,11 @@ object CrosswordScraper {
     private val SOURCES = listOf(
         AmuseLabsSource,
         BostonGlobeSource,
+        CnnSource,
         CrosshareSource,
         CrosswordCompilerSource,
         CrosswordNexusSource,
+        CrosswordrSource,
         GuardianSource,
         NewYorkTimesSource,
         PuzzleSocietySource,

@@ -25,7 +25,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew --no-daemon check assemble
       - name: Archive extension zip
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: extension-zip
           path: build/distributions/CrosswordScraper*.zip

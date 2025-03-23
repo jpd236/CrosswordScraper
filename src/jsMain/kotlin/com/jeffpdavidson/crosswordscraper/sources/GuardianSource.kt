@@ -14,11 +14,11 @@ object GuardianSource : FixedHostSource() {
     override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult {
         val scrapeFn = js(
             """function() {
-                var crosswordElems = document.getElementsByClassName("js-crossword");
-                if (crosswordElems.length == 0 || !crosswordElems[0].dataset["crosswordData"]) {
+                var crosswordElem = document.querySelector('gu-island[name="CrosswordComponent"]');
+                if (!crosswordElem || !crosswordElem.hasAttributes("props")) {
                   return '';
                 }
-                return crosswordElems[0].dataset["crosswordData"];
+                return JSON.stringify(JSON.parse(crosswordElem.getAttribute("props")).data);
             }"""
         )
         val puzzleJson = Scraping.executeFunctionForString(tabId, frameId, scrapeFn)

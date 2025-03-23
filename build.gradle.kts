@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.jeffpdavidson"
-version = "1.3.21"
+version = "1.3.22-SNAPSHOT"
 
 repositories {
     mavenCentral()

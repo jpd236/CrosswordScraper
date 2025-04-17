@@ -10,10 +10,10 @@ import com.jeffpdavidson.crosswordscraper.sources.CrosswordCompilerSource
 import com.jeffpdavidson.crosswordscraper.sources.CrosswordNexusSource
 import com.jeffpdavidson.crosswordscraper.sources.CrosswordrSource
 import com.jeffpdavidson.crosswordscraper.sources.DailyPrincetonianSource
+import com.jeffpdavidson.crosswordscraper.sources.GoComicsSource
 import com.jeffpdavidson.crosswordscraper.sources.GuardianSource
 import com.jeffpdavidson.crosswordscraper.sources.NewYorkTimesSource
 import com.jeffpdavidson.crosswordscraper.sources.PuzzleLinkSource
-import com.jeffpdavidson.crosswordscraper.sources.PuzzleSocietySource
 import com.jeffpdavidson.crosswordscraper.sources.PzzlSource
 import com.jeffpdavidson.crosswordscraper.sources.ScrapeResult
 import com.jeffpdavidson.crosswordscraper.sources.TheWeekSource
@@ -76,9 +76,9 @@ object CrosswordScraper {
         CrosswordNexusSource,
         CrosswordrSource,
         DailyPrincetonianSource,
+        GoComicsSource,
         GuardianSource,
         NewYorkTimesSource,
-        PuzzleSocietySource,
         PzzlSource,
         TheWeekSource,
         UniversalSource,

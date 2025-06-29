@@ -19,6 +19,7 @@ import com.jeffpdavidson.crosswordscraper.sources.ScrapeResult
 import com.jeffpdavidson.crosswordscraper.sources.TheWeekSource
 import com.jeffpdavidson.crosswordscraper.sources.UniversalSource
 import com.jeffpdavidson.crosswordscraper.sources.WallStreetJournalSource
+import com.jeffpdavidson.crosswordscraper.sources.WashingtonPostSource
 import com.jeffpdavidson.crosswordscraper.sources.WorldOfCrosswordsSource
 import com.jeffpdavidson.crosswordscraper.sources.XWordInfoSource
 import com.jeffpdavidson.kotwords.formats.Puzzleable
@@ -83,6 +84,7 @@ object CrosswordScraper {
         TheWeekSource,
         UniversalSource,
         WallStreetJournalSource,
+        WashingtonPostSource,
         WorldOfCrosswordsSource,
         XWordInfoSource,
 

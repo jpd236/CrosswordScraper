@@ -15,7 +15,8 @@ object WashingtonPostSource : FixedHostSource() {
     override fun neededHostPermissions(url: URL) = listOf("https://*.wapo.pub/*")
 
     override fun matchesUrl(url: URL): Boolean {
-        return url.hostname == "discovery-games-portal-prod-cdn.site.aws.wapo.pub"
+        return url.hostname == "discovery-games-portal-prod-cdn.site.aws.wapo.pub" ||
+                (url.hostname == "www.washingtonpost.com" && url.pathname.contains("/games-crossword/"))
     }
 
     private val MODAL_DATE_FORMAT = DateFormat("MMM d, YYYY")

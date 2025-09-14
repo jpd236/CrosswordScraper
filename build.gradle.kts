@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.jeffpdavidson"
-version = "1.3.26-SNAPSHOT"
+version = "1.3.26"
 
 repositories {
     mavenCentral()
@@ -37,7 +37,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-js:1.6.2")
                 implementation("com.github.ajalt.colormath:colormath-js:3.3.3")
 
-                implementation("com.jeffpdavidson.kotwords:kotwords-js:1.4.7")
+                implementation("com.jeffpdavidson.kotwords:kotwords-js:1.4.8")
 
                 // TODO: Migrate to kotlinx-datetime if parsing/formatting support is added.
                 implementation("com.soywiz.korlibs.klock:klock-js:4.0.10")

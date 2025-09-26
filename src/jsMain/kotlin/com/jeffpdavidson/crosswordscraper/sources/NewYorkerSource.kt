@@ -27,6 +27,10 @@ object NewYorkerSource : FixedHostSource() {
             return ScrapeResult.Success(listOf())
         }
         val puzzleUrl = "https://puzzles-games-api.gp-prod.conde.digital/api/v1/games/$id"
+        val permissions = getPermissionsForUrls(listOf(URL(puzzleUrl)))
+        if (!hasPermissions(permissions)) {
+            return ScrapeResult.NeedPermissions(permissions)
+        }
         val puzzleJson = JSON.parse<NewYorkerJson>(Http.fetchAsString(puzzleUrl))
         return ScrapeResult.Success(listOf(Xd(puzzleJson.data)))
     }

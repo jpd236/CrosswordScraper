@@ -414,17 +414,6 @@ object CrosswordScraper {
             +scrapedPuzzle.source
         }
         +"Scrape error"
-
-        // For Amuse Labs, show disclaimer page in case this is a new form of obfuscation.
-        if (scrapedPuzzle.source == AmuseLabsSource.sourceName) {
-            +" ("
-            a {
-                href = getURL("amuse-labs.html")
-                target = "_blank"
-                +"details"
-            }
-            +")"
-        }
     }
 
     private fun HtmlBlockTag.renderPermissionPrompt(

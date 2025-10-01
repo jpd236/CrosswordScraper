@@ -19,7 +19,13 @@ object WallStreetJournalSource : FixedHostSource() {
     override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult {
         val scrapeFn = js(
             """function() {
-                return window.oApp.puzzle.JSON ? JSON.stringify(window.oApp.puzzle.JSON) : '';
+                if (window.oApp && window.oApp.puzzle && window.oApp.puzzle.JSON) {
+                    return JSON.stringify(window.oApp.puzzle.JSON);
+                }
+                if (window.app && window.app.json) {
+                    return JSON.stringify({ 'data': window.app.json });
+                }
+                return '';
             }"""
         )
         val puzzleJsonString = Scraping.executeFunctionForString(tabId, frameId, scrapeFn)

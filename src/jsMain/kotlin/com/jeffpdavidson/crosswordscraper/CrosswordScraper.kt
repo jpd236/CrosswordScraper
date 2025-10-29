@@ -219,8 +219,8 @@ object CrosswordScraper {
     private suspend fun scrapePuzzles(): Pair<Set<ProcessedScrapeResult>, String> {
         val debugLog = StringBuilder()
         debugLog.appendLine("Crossword Scraper Debug Log")
-        debugLog.appendLine("Please attach this file to any your issue report")
-        debugLog.appendLine("------------------------------------------------")
+        debugLog.appendLine("Please attach this file to any issue report")
+        debugLog.appendLine("-------------------------------------------")
         debugLog.appendLine("Generated at: ${Date(Date.now()).toISOString()}")
         debugLog.appendLine("Extension version: ${browser.runtime.getManifest().version}")
         debugLog.appendLine("Browser: ${window.navigator.userAgent}")

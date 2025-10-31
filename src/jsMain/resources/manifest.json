@@ -2,7 +2,7 @@
   "manifest_version": {MANIFEST_VERSION},
   "name": "Crossword Scraper",
   "description": "Download digital puzzle files from crossword applets for offline solving.",
-  "version": "1.3.31",
+  "version": "1.3.32",
   "icons": {
     "128": "128.png"
   },

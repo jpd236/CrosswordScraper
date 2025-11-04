@@ -3,10 +3,6 @@ package com.jeffpdavidson.crosswordscraper.sources
 import com.jeffpdavidson.crosswordscraper.Http
 import com.jeffpdavidson.crosswordscraper.Scraping
 import com.jeffpdavidson.kotwords.formats.WashingtonPost
-import korlibs.time.DateFormat
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.json.Json
 import org.w3c.dom.url.URL
 
 object WashingtonPostSource : FixedHostSource() {
@@ -15,41 +11,68 @@ object WashingtonPostSource : FixedHostSource() {
     override fun neededHostPermissions(url: URL) = listOf("https://*.wapo.pub/*")
 
     override fun matchesUrl(url: URL): Boolean {
-        return url.hostname == "discovery-games-portal-prod-cdn.site.aws.wapo.pub" ||
-                (url.hostname == "www.washingtonpost.com" && url.pathname.contains("/games-crossword/"))
+        // only match iframe URL to avoid duplicate processing
+        // main pages load the iframe that we will scrape
+        return url.pathname.contains("/games-static/games-crossword/")
     }
 
-    private val MODAL_DATE_FORMAT = DateFormat("MMM d, YYYY")
-    private val URL_DATE_FORMAT = DateFormat("YYYY/MM/dd")
-
     override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult {
-        val scrapeFn = js(
-            """function() {
-                return JSON.stringify(
-                    Array.from(
-                        window.document.getElementsByClassName('wpds-modal')
-                    ).map(function(elem) { return elem.innerText; })
-                );
-            }"""
-        )
-        val modalsJson = Scraping.executeFunctionForString(tabId, frameId, scrapeFn)
-        val modals = Json.decodeFromString(ListSerializer(String.serializer()), modalsJson)
-        val puzzleLink = modals.firstNotNullOfOrNull { modal ->
-            val date = modal.lines().firstNotNullOfOrNull { line ->
-                MODAL_DATE_FORMAT.tryParse(line, doThrow = false, doAdjust = false)
-            }
-            date?.let {
-                val source = if (modal.contains("Daily crosswords")) "daily" else "sunday"
-                val urlDate = URL_DATE_FORMAT.format(it)
-                "https://games-service-prod.site.aws.wapo.pub/crossword/levels/$source/$urlDate"
-            }
+        // look through all frames to find the crossword iframe and check if it has loaded puzzle data
+        val (allTabId, frames) = Scraping.getAllFrames()
+        val crosswordFrame = frames.firstOrNull {
+            it.url.contains("/games-static/games-crossword/")
         }
-        return puzzleLink?.let {
-            val neededPermissions = getPermissionsForUrls(listOf(URL(it)))
-            if (!hasPermissions(neededPermissions)) {
-                ScrapeResult.NeedPermissions(neededPermissions)
+
+        val puzzleUrl = crosswordFrame?.let {
+            // try to extract *all* puzzle URLs from the iframe's resources and detect which is displayed
+            val scrapeFn = js(
+                """function() {
+                    // check performance API for fetch requests to the puzzle API
+                    var puzzleUrls = [];
+                    if (window.performance && window.performance.getEntriesByType) {
+                        var entries = window.performance.getEntriesByType('resource');
+                        for (var i = 0; i < entries.length; i++) {
+                            var name = entries[i].name;
+                            if (name && name.includes('games-service-prod.site.aws.wapo.pub/crossword/levels/')) {
+                                puzzleUrls.push(name);
+                            }
+                        }
+                    }
+
+                    // check if page content contains "Evan Birnholz" // TODO this feels hacky...
+                    var isSundayPuzzle = document.body && document.body.innerText.includes('Evan Birnholz');
+
+                    return JSON.stringify({
+                        urls: puzzleUrls,
+                        isSunday: isSundayPuzzle
+                    });
+                }"""
+            )
+
+            val resultJson = Scraping.executeFunctionForString(allTabId, it.frameId, scrapeFn)
+            if (resultJson.isNotEmpty() && resultJson != "{}") {
+                val result = JSON.parse<dynamic>(resultJson)
+                val urlStrings = result.urls as Array<String>
+                val isSundayPuzzle = result.isSunday as Boolean
+
+                urlStrings.firstOrNull { urlString ->
+                    urlString.contains(if (isSundayPuzzle) "/sunday/" else "/daily/")
+                } ?: urlStrings.firstOrNull()
+            } else {
+                null
             }
-            ScrapeResult.Success(listOf(WashingtonPost(Http.fetchAsString(it))))
-        } ?: ScrapeResult.Success()
+        } ?: return ScrapeResult.Success()
+
+        val neededPermissions = getPermissionsForUrls(listOf(URL(puzzleUrl)))
+        if (!hasPermissions(neededPermissions)) {
+            return ScrapeResult.NeedPermissions(neededPermissions)
+        }
+
+        return try {
+            ScrapeResult.Success(listOf(WashingtonPost(Http.fetchAsString(puzzleUrl))))
+        } catch (e: Http.HttpException) {
+            // TODO? avoid swallowing exception
+            ScrapeResult.Success()
+        }
     }
 }

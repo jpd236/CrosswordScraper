@@ -28,7 +28,7 @@ object WashingtonPostSource : FixedHostSource() {
                 return JSON.stringify(
                     Array.from(
                         window.document.getElementsByClassName('wpds-modal')
-                    ).map(function(elem) { return elem.innerText; })
+                    ).map(function(elem) { return elem.textContent; })
                 );
             }"""
         )

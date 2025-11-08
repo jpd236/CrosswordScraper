@@ -19,6 +19,7 @@ object WashingtonPostSource : FixedHostSource() {
                 (url.hostname == "www.washingtonpost.com" && url.pathname.contains("/games-crossword/"))
     }
 
+    private val MODAL_DATE_REGEX = "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [0-9]+, [0-9]+".toRegex()
     private val MODAL_DATE_FORMAT = DateFormat("MMM d, YYYY")
     private val URL_DATE_FORMAT = DateFormat("YYYY/MM/dd")
 
@@ -35,14 +36,12 @@ object WashingtonPostSource : FixedHostSource() {
         val modalsJson = Scraping.executeFunctionForString(tabId, frameId, scrapeFn)
         val modals = Json.decodeFromString(ListSerializer(String.serializer()), modalsJson)
         val puzzleLink = modals.firstNotNullOfOrNull { modal ->
-            val date = modal.lines().firstNotNullOfOrNull { line ->
-                MODAL_DATE_FORMAT.tryParse(line, doThrow = false, doAdjust = false)
-            }
-            date?.let {
-                val source = if (modal.contains("Daily crosswords")) "daily" else "sunday"
-                val urlDate = URL_DATE_FORMAT.format(it)
-                "https://games-service-prod.site.aws.wapo.pub/crossword/levels/$source/$urlDate"
-            }
+            val dateText = MODAL_DATE_REGEX.find(modal) ?: return@firstNotNullOfOrNull null
+            val date = MODAL_DATE_FORMAT.tryParse(dateText.value, doThrow = false, doAdjust = false)
+                ?: return@firstNotNullOfOrNull null
+            val source = if (modal.contains("Daily crosswords")) "daily" else "sunday"
+            val urlDate = URL_DATE_FORMAT.format(date)
+            "https://games-service-prod.site.aws.wapo.pub/crossword/levels/$source/$urlDate"
         }
         return puzzleLink?.let {
             val neededPermissions = getPermissionsForUrls(listOf(URL(it)))

@@ -2,6 +2,7 @@ package com.jeffpdavidson.crosswordscraper
 
 import browser.permissions.Permissions
 import browser.runtime.getURL
+import com.jeffpdavidson.crosswordscraper.CrosswordScraper.isDuplicate
 import com.jeffpdavidson.crosswordscraper.sources.AmuseLabsSource
 import com.jeffpdavidson.crosswordscraper.sources.BostonGlobeSource
 import com.jeffpdavidson.crosswordscraper.sources.CnnSource
@@ -274,6 +275,7 @@ object CrosswordScraper {
                                     }
                                 }
                             }
+
                             is ScrapeResult.NeedPermissions ->
                                 // Only add permission prompts if none of the previous results contain the same set of
                                 // permission requests.
@@ -298,6 +300,7 @@ object CrosswordScraper {
                                         "Need permissions: source = ${source.sourceName}, already covered"
                                     )
                                 }
+
                             is ScrapeResult.Error -> {
                                 puzzles.add(ProcessedScrapeResult.Error(source.sourceName))
                                 debugLog.appendLine(

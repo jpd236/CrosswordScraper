@@ -3,7 +3,6 @@ package com.jeffpdavidson.crosswordscraper.sources
 import com.jeffpdavidson.crosswordscraper.Http
 import com.jeffpdavidson.crosswordscraper.Scraping
 import com.jeffpdavidson.crosswordscraper.sources.Source.Companion.hostIsDomainOrSubdomainOf
-import com.jeffpdavidson.kotwords.formats.AcrossLite
 import com.jeffpdavidson.kotwords.formats.Crosshare
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject

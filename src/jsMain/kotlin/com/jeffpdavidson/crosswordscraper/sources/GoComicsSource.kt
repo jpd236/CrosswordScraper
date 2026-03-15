@@ -7,6 +7,7 @@ import com.jeffpdavidson.kotwords.formats.UclickJpz
 import com.jeffpdavidson.kotwords.formats.UclickXml
 import korlibs.time.DateFormat
 import korlibs.time.DateTime
+import korlibs.time.date
 import korlibs.time.parseDate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -19,7 +20,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.w3c.dom.asList
 import org.w3c.dom.parsing.DOMParser
 import org.w3c.dom.url.URL
-import org.w3c.files.FileReaderSync
 
 object GoComicsSource : FixedHostSource() {
 

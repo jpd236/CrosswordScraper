@@ -20,19 +20,20 @@ enum class FileFormat(
         "ipuz",
         { it.puzzleType in listOf(Puzzle.PuzzleType.CROSSWORD, Puzzle.PuzzleType.CODED) },
         { it.asIpuzFile() }),
-    PDF("pdf",
+    PDF(
+        "pdf",
         supportsPuzzle = {
             // Disable PDF on Firefox for Android for now: https://bugzilla.mozilla.org/show_bug.cgi?id=1877898
             !isFirefoxForAndroid()
         }, {
             val fontFamily = if (Settings.getPdfFont() == "NotoSans") {
-                PdfFonts.getNotoSansFontFamily()
+                PdfFonts.NOTO_SANS_FONT_FAMILY
             } else {
-                PdfFonts.getNotoSerifFontFamily()
+                PdfFonts.NOTO_SERIF_FONT_FAMILY
             }
             it.asPdf(
                 fontFamily = fontFamily,
-                blackSquareLightnessAdjustment = Settings.getPdfInkSaverPercentage() / 100f
+                blackSquareLightnessAdjustment = Settings.getPdfInkSaverPercentage() / 100.0
             )
         }),
 }

@@ -1,7 +1,7 @@
 package com.jeffpdavidson.crosswordscraper
 
 import com.github.ajalt.colormath.model.RGB
-import com.jeffpdavidson.kotwords.formats.Pdf
+import com.jeffpdavidson.kotwords.formats.pdf.Pdf
 import kotlinx.browser.document
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.await
@@ -207,7 +207,7 @@ object Settings {
     private fun onInkSaverPercentageInput() {
         pdfInkSaverPercentageText.innerText = "${pdfInkSaverPercentageInput.value}%"
         pdfInkSaverPercentageSquare.style.backgroundColor =
-            Pdf.getAdjustedColor(RGB("#000000"), pdfInkSaverPercentageInput.value.toInt() / 100f).toHex()
+            Pdf.getAdjustedColor(RGB("#000000"), pdfInkSaverPercentageInput.value.toInt() / 100.0).toHex()
     }
 
     private fun onAutoDownloadChanged() {

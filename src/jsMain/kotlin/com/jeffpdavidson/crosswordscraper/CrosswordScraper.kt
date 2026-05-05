@@ -24,6 +24,7 @@ import com.jeffpdavidson.crosswordscraper.sources.WallStreetJournalSource
 import com.jeffpdavidson.crosswordscraper.sources.WashingtonPostSource
 import com.jeffpdavidson.crosswordscraper.sources.WorldOfCrosswordsSource
 import com.jeffpdavidson.crosswordscraper.sources.XWordInfoSource
+import com.jeffpdavidson.crosswordscraper.sources.YahooMiniSource
 import com.jeffpdavidson.kotwords.formats.Puzzleable
 import com.jeffpdavidson.kotwords.model.Puzzle
 import isFirefoxForAndroid
@@ -90,6 +91,7 @@ object CrosswordScraper {
         WashingtonPostSource,
         WorldOfCrosswordsSource,
         XWordInfoSource,
+        YahooMiniSource,
 
         // Prefer extracted puzzles from applets to .puz files, which tend to be more constrained.
         PuzzleLinkSource,

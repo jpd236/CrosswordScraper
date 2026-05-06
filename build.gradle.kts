@@ -4,17 +4,17 @@ plugins {
 }
 
 group = "com.jeffpdavidson"
-version = "1.3.33-SNAPSHOT"
+version = "1.3.33"
 
 repositories {
     mavenCentral()
     // TODO: Remove ahead of public release.
-    maven {
-        url = uri("https://central.sonatype.com/repository/maven-snapshots/")
-        content {
-            includeModule("com.jeffpdavidson.kotwords", "kotwords-js")
-        }
-    }
+    // maven {
+    //     url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+    //     content {
+    //         includeModule("com.jeffpdavidson.kotwords", "kotwords-js")
+    //     }
+    // }
 }
 
 kotlin {
@@ -37,7 +37,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-js:1.10.0")
                 implementation("com.github.ajalt.colormath:colormath-js:3.6.1")
 
-                implementation("com.jeffpdavidson.kotwords:kotwords-js:1.5.1-SNAPSHOT")
+                implementation("com.jeffpdavidson.kotwords:kotwords-js:1.5.1")
 
                 // TODO: Migrate to kotlinx-datetime if parsing/formatting support is added.
                 implementation("com.soywiz:korlibs-time:6.0.0")

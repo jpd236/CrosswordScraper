@@ -16,6 +16,8 @@ import com.jeffpdavidson.crosswordscraper.sources.GuardianSource
 import com.jeffpdavidson.crosswordscraper.sources.NewYorkTimesSource
 import com.jeffpdavidson.crosswordscraper.sources.NewYorkerSource
 import com.jeffpdavidson.crosswordscraper.sources.PuzzleLinkSource
+import com.jeffpdavidson.crosswordscraper.sources.PuzzmoEmbedSource
+import com.jeffpdavidson.crosswordscraper.sources.PuzzmoSource
 import com.jeffpdavidson.crosswordscraper.sources.PzzlSource
 import com.jeffpdavidson.crosswordscraper.sources.ScrapeResult
 import com.jeffpdavidson.crosswordscraper.sources.TheWeekSource
@@ -84,6 +86,8 @@ object CrosswordScraper {
         GuardianSource,
         NewYorkTimesSource,
         NewYorkerSource,
+        PuzzmoEmbedSource,
+        PuzzmoSource,
         PzzlSource,
         TheWeekSource,
         UniversalSource,

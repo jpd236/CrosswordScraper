@@ -18,33 +18,44 @@ object Http {
 
     /** Make a GET request to the given URL and return the result as a String. */
     suspend fun fetchAsString(url: String, headers: List<Pair<String, String>> = listOf()): String {
-        return fetch(url, XMLHttpRequestResponseType.TEXT, headers) as String
+        return fetch(url, "GET", null, XMLHttpRequestResponseType.TEXT, headers) as String
+    }
+
+    /** Make a POST request to the given URL and return the result as a String. */
+    suspend fun postAsString(url: String, data: String, headers: List<Pair<String, String>> = listOf()): String {
+        return fetch(url, "POST", data, XMLHttpRequestResponseType.TEXT, headers) as String
     }
 
     /** Make a GET request to the given URL and return the result as a ByteArray. */
     suspend fun fetchAsBinary(url: String, headers: List<Pair<String, String>> = listOf()): ByteArray {
-        val response = fetch(url, XMLHttpRequestResponseType.ARRAYBUFFER, headers)
+        val response = fetch(url, "GET", null, XMLHttpRequestResponseType.ARRAYBUFFER, headers)
         return Int8Array(response as ArrayBuffer).asDynamic() as ByteArray
     }
 
     private suspend fun fetch(
         url: String,
+        method: String,
+        data: String?,
         responseType: XMLHttpRequestResponseType,
         headers: List<Pair<String, String>>,
     ): dynamic {
         val request: XMLHttpRequest = suspendCoroutine { cont ->
             val xhr = XMLHttpRequest()
             xhr.responseType = responseType
-            xhr.open("GET", url)
+            xhr.open(method, url)
             xhr.onload = { _ -> cont.resume(xhr) }
-            xhr.onerror = { _ -> cont.resumeWithException(HttpException("HTTP GET error from URL: $url")) }
+            xhr.onerror = { _ -> cont.resumeWithException(HttpException("HTTP ${method} error from URL: $url")) }
             headers.forEach { (key, value) ->
                 xhr.setRequestHeader(key, value)
             }
-            xhr.send()
+            if (data != null) {
+                xhr.send(data)
+            } else {
+                xhr.send()
+            }
         }
         if (request.status != 200.toShort()) {
-            throw HttpException("HTTP GET error code ${request.status} from URL: $url")
+            throw HttpException("HTTP ${method} error code ${request.status} from URL: $url")
         }
         return request.response
     }

@@ -29,7 +29,15 @@ function browserExecuteFunctionForString(tabId, frameId, fn) {
         // workaround, we can put it behind a blob: URL.
         "var scriptElem = document.createElement('script');\n" +
         "scriptElem.setAttribute('id', '" + scriptName + "');\n" +
-        "var scriptText = 'document.getElementById(\"" + divName + "\").textContent = " + functionCode + "';\n" +
+        "var scriptText = " +
+        "'var res = " + functionCode + "; ' +\n" +
+        // If the result is a Promise, await the result and put it in the div. Otherwise put the result directly in the
+        // div.
+        "'if (res && typeof res.then === \"function\") { ' +\n" +
+        "'    res.then(function(val) { document.getElementById(\"" + divName + "\").textContent = val; }); ' +\n" +
+        "'} else { ' +\n" +
+        "'    document.getElementById(\"" + divName + "\").textContent = res; ' +\n" +
+        "'}';\n" +
         "var scriptBlob = new Blob([decodeURIComponent(scriptText)], {type: 'text/javascript'});\n" +
         "var scriptUrl = URL.createObjectURL(scriptBlob);\n" +
         "scriptElem.src = scriptUrl;\n" +

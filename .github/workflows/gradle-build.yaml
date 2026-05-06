@@ -5,16 +5,18 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           distribution: 'microsoft'
           java-version: '17'
       - name: Cache Gradle packages
-        uses: actions/cache@v3
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
         with:
           path: |
             ~/.gradle/caches
@@ -24,8 +26,21 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Build with Gradle
         run: ./gradlew --no-daemon check assemble
-      - name: Archive extension zip
-        uses: actions/upload-artifact@v4
+      - name: Archive Chrome extension
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: extension-zip
-          path: build/distributions/CrosswordScraper*.zip
+          name: CrosswordScraper-chrome
+          path: build/distributions/CrosswordScraper-productionChrome*.zip
+          archive: false
+      - name: Archive Firefox extension
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: CrosswordScraper-firefox
+          path: build/distributions/CrosswordScraper-productionFirefox*.zip
+          archive: false
+      - name: Upload to GitHub Release
+        # Only run this step for tagged releases
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload ${{ github.ref_name }} build/distributions/CrosswordScraper*.zip --clobber

@@ -11,7 +11,7 @@ object PuzzmoSource : FixedHostSource() {
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    private val PUZZLE_PATH_PATTERN = Regex("^/puzzle/(\\d{4}-\\d{2}-\\d{2})/.+")
+    private val PUZZLE_PATH_PATTERN = Regex(".*/(puzzle/\\d{4}-\\d{2}-\\d{2}|play/crossword)/.+")
 
     override val sourceName: String = "Puzzmo"
 
@@ -25,9 +25,17 @@ object PuzzmoSource : FixedHostSource() {
         // Execute the fetch natively in the page's context in order to make POST requests with the right origin.
         val jsonFetchFn = js(
             $$"""function() {
-              var pathMatch = window.location.pathname.match(/^\/puzzle\/(.+)/);
-              if (!pathMatch) return Promise.resolve("{}");
-              var finderKey = "today:/" + pathMatch[1];
+              var pathname = window.location.pathname;
+              var puzzleMatch = pathname.match(/\/puzzle\/(\d{4}-\d{2}-\d{2}\/.+)/);
+              var playMatch = pathname.match(/\/play\/(crossword\/.+)/);
+              var finderKey;
+              if (puzzleMatch) {
+                finderKey = "today:/" + puzzleMatch[1];
+              } else if (playMatch) {
+                finderKey = "play:/" + playMatch[1];
+              } else {
+                return Promise.resolve("{}");
+              }
 
               return fetch("https://www.puzzmo.com/_api/prod/graphql?PlayGameScreenQuery", {
                 method: "POST",

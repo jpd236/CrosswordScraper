@@ -22,6 +22,12 @@ object PuzzmoEmbedSource : FixedHostSource() {
               var searchParams = new URLSearchParams(window.location.search);
               var embedId = searchParams.get("embedID");
               var submissionId = searchParams.get("submissionID");
+
+              if (window.location.pathname.endsWith("/latest.html") && embedId && !submissionId) {
+                return fetch("https://puzmo.blob.core.windows.net/embed-cache/" + embedId + ".json")
+                  .then(function(response) { return response.text(); });
+              }
+
               if (!embedId || !submissionId) return Promise.resolve("{}");
 
               return fetch("https://api.puzzmo.com/graphql?op=embedConfigBootstrapQueryMutation", {

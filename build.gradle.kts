@@ -37,7 +37,7 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-js:1.10.0")
                 implementation("com.github.ajalt.colormath:colormath-js:3.6.1")
 
-                implementation("com.jeffpdavidson.kotwords:kotwords-js:1.5.1")
+                implementation("com.jeffpdavidson.kotwords:kotwords-js:1.5.2")
 
                 // TODO: Migrate to kotlinx-datetime if parsing/formatting support is added.
                 implementation("com.soywiz:korlibs-time:6.0.0")

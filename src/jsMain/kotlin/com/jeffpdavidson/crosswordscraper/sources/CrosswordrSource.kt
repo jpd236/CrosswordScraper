@@ -1,11 +1,10 @@
 package com.jeffpdavidson.crosswordscraper.sources
 
 import com.jeffpdavidson.crosswordscraper.Http
+import com.jeffpdavidson.crosswordscraper.encodeURIComponent
 import com.jeffpdavidson.crosswordscraper.sources.Source.Companion.hostIsDomainOrSubdomainOf
 import com.jeffpdavidson.kotwords.formats.Crosswordr
 import org.w3c.dom.url.URL
-
-external fun encodeURIComponent(text: String): String
 
 object CrosswordrSource : FixedHostSource() {
 

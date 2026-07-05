@@ -22,13 +22,24 @@ object PuzzmoEmbedSource : FixedHostSource() {
               var searchParams = new URLSearchParams(window.location.search);
               var embedId = searchParams.get("embedID");
               var submissionId = searchParams.get("submissionID");
+              var dateKey = searchParams.get("dateKey");
+              var hasPuzzleKey = submissionId || dateKey;
 
-              if (window.location.pathname.endsWith("/latest.html") && embedId && !submissionId) {
+              if (window.location.pathname.endsWith("/latest.html") && embedId && !hasPuzzleKey) {
                 return fetch("https://puzmo.blob.core.windows.net/embed-cache/" + embedId + ".json")
                   .then(function(response) { return response.text(); });
               }
 
-              if (!embedId || !submissionId) return Promise.resolve("{}");
+              if (!embedId || !hasPuzzleKey) return Promise.resolve("{}");
+
+              var fetchOptions = {
+                embedID: embedId,
+              };
+              if (submissionId) {
+                fetchOptions.submissionID = submissionId;
+              } else if (dateKey) {
+                fetchOptions.dateKey = dateKey;
+              }
 
               return fetch("https://api.puzzmo.com/graphql?op=embedConfigBootstrapQueryMutation", {
                 method: "POST",
@@ -41,7 +52,7 @@ object PuzzmoEmbedSource : FixedHostSource() {
                   "}",
                   variables: {
                     id: embedId,
-                    options: { embedID: embedId, submissionID: submissionId }
+                    options: fetchOptions,
                   }
                 })
               }).then(function(response) {

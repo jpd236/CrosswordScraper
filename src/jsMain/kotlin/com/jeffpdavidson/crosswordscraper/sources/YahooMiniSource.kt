@@ -40,19 +40,21 @@ object YahooMiniSource : FixedHostSource() {
                 continue
             }
 
-            val bracketIndex = innerString.indexOf('[')
-            if (bracketIndex == -1) {
-                continue
-            }
-            val innerJsonStr = innerString.substring(bracketIndex)
-            val puzzleData = try {
-                val innerJson = Json.parseToJsonElement(innerJsonStr)
-                findPuzzle(innerJson)
-            } catch (_: Exception) {
-                null
-            } ?: continue
+            for (line in innerString.lines()) {
+                val innerJson = line.substringAfter(':', "").trim()
+                if (innerJson.isEmpty() || (!innerJson.startsWith("{") && !innerJson.startsWith("["))) {
+                    continue
+                }
 
-            return ScrapeResult.Success(listOf(Xd(puzzleData)))
+                val puzzleData = try {
+                    val jsonElement = Json.parseToJsonElement(innerJson)
+                    findPuzzle(jsonElement)
+                } catch (_: Exception) {
+                    null
+                } ?: continue
+
+                return ScrapeResult.Success(listOf(Xd(puzzleData)))
+            }
         }
 
         return ScrapeResult.Success(listOf())

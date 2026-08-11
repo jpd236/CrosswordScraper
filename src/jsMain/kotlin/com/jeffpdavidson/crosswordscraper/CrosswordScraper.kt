@@ -13,6 +13,7 @@ import com.jeffpdavidson.crosswordscraper.sources.CrosswordrSource
 import com.jeffpdavidson.crosswordscraper.sources.DailyPrincetonianSource
 import com.jeffpdavidson.crosswordscraper.sources.GoComicsSource
 import com.jeffpdavidson.crosswordscraper.sources.GuardianSource
+import com.jeffpdavidson.crosswordscraper.sources.HeyGoodGameSource
 import com.jeffpdavidson.crosswordscraper.sources.NewYorkTimesSource
 import com.jeffpdavidson.crosswordscraper.sources.NewYorkerSource
 import com.jeffpdavidson.crosswordscraper.sources.PuzzleLinkSource
@@ -85,6 +86,7 @@ object CrosswordScraper {
         DailyPrincetonianSource,
         GoComicsSource,
         GuardianSource,
+        HeyGoodGameSource,
         NewYorkTimesSource,
         NewYorkerSource,
         PuzzlrSource,

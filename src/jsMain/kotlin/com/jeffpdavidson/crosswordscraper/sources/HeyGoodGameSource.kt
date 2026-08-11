@@ -17,6 +17,7 @@ object HeyGoodGameSource : FixedHostSource() {
         listOf(
             "https://*.midicrossword.com/*",
             "https://*.minicrossword.com/*",
+            "https://*.play.hey.gg/*",
         )
 
     override fun matchesUrl(url: URL): Boolean {

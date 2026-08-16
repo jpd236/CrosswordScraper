@@ -24,6 +24,7 @@ import com.jeffpdavidson.crosswordscraper.sources.PzzlSource
 import com.jeffpdavidson.crosswordscraper.sources.ScrapeResult
 import com.jeffpdavidson.crosswordscraper.sources.TheWeekSource
 import com.jeffpdavidson.crosswordscraper.sources.UniversalSource
+import com.jeffpdavidson.crosswordscraper.sources.UsaTodaySource
 import com.jeffpdavidson.crosswordscraper.sources.WallStreetJournalSource
 import com.jeffpdavidson.crosswordscraper.sources.WashingtonPostSource
 import com.jeffpdavidson.crosswordscraper.sources.WorldOfCrosswordsSource
@@ -95,6 +96,7 @@ object CrosswordScraper {
         PzzlSource,
         TheWeekSource,
         UniversalSource,
+        UsaTodaySource,
         WallStreetJournalSource,
         WashingtonPostSource,
         WorldOfCrosswordsSource,

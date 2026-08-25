@@ -9,12 +9,12 @@ version = "1.3.38-SNAPSHOT"
 repositories {
     mavenCentral()
     // TODO: Remove ahead of public release.
-    // maven {
-    //     url = uri("https://central.sonatype.com/repository/maven-snapshots/")
-    //     content {
-    //         includeModule("com.jeffpdavidson.kotwords", "kotwords-js")
-    //     }
-    // }
+    maven {
+        url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+        content {
+            includeModule("com.jeffpdavidson.kotwords", "kotwords-js")
+        }
+    }
 }
 
 kotlin {

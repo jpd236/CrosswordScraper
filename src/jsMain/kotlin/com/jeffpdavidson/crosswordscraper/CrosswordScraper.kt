@@ -22,6 +22,7 @@ import com.jeffpdavidson.crosswordscraper.sources.PuzzmoEmbedSource
 import com.jeffpdavidson.crosswordscraper.sources.PuzzmoSource
 import com.jeffpdavidson.crosswordscraper.sources.PzzlSource
 import com.jeffpdavidson.crosswordscraper.sources.ScrapeResult
+import com.jeffpdavidson.crosswordscraper.sources.TelegraphSource
 import com.jeffpdavidson.crosswordscraper.sources.TheWeekSource
 import com.jeffpdavidson.crosswordscraper.sources.UniversalSource
 import com.jeffpdavidson.crosswordscraper.sources.UsaTodaySource
@@ -94,6 +95,7 @@ object CrosswordScraper {
         PuzzmoEmbedSource,
         PuzzmoSource,
         PzzlSource,
+        TelegraphSource,
         TheWeekSource,
         UniversalSource,
         UsaTodaySource,

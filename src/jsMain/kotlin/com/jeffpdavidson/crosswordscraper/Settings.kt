@@ -1,6 +1,7 @@
 package com.jeffpdavidson.crosswordscraper
 
 import com.github.ajalt.colormath.model.RGB
+import com.jeffpdavidson.kotwords.formats.pdf.GridCorner
 import com.jeffpdavidson.kotwords.formats.pdf.Pdf
 import kotlinx.browser.document
 import kotlinx.coroutines.MainScope
@@ -36,8 +37,16 @@ object Settings {
     private const val ID_PDF_INK_SAVER_PERCENTAGE_TEXT = "pdf-ink-saver-text"
     private const val ID_PDF_INK_SAVER_PERCENTAGE_SQUARE = "pdf-ink-saver-square"
     private const val ID_PDF_FONT = "pdf-font"
+    private const val ID_PDF_GRID_CORNER = "pdf-grid-corner"
     private const val ID_AUTO_DOWNLOAD = "auto-download"
     private const val ID_AUTO_DOWNLOAD_FORMAT = "auto-download-format"
+
+    private val GRID_CORNERS = listOf(
+        GridCorner.BOTTOM_RIGHT to "Bottom right",
+        GridCorner.BOTTOM_LEFT to "Bottom left",
+        GridCorner.TOP_RIGHT to "Top right",
+        GridCorner.TOP_LEFT to "Top left",
+    )
 
     private val puzUnicodeSupportInput by lazy { document.getElementById(ID_PUZ_UNICODE_SUPPORT) as HTMLInputElement }
     private val pdfInkSaverPercentageInput by lazy {
@@ -50,6 +59,7 @@ object Settings {
         document.getElementById(ID_PDF_INK_SAVER_PERCENTAGE_SQUARE) as HTMLDivElement
     }
     private val pdfFont by lazy { document.getElementById(ID_PDF_FONT) as HTMLSelectElement }
+    private val pdfGridCorner by lazy { document.getElementById(ID_PDF_GRID_CORNER) as HTMLSelectElement }
     private val autoDownload by lazy { document.getElementById(ID_AUTO_DOWNLOAD) as HTMLInputElement }
     private val autoDownloadFormat by lazy { document.getElementById(ID_AUTO_DOWNLOAD_FORMAT) as HTMLSelectElement }
 
@@ -176,6 +186,28 @@ object Settings {
                     }
                 }
             }
+            div("mb-3") {
+                label {
+                    htmlFor = ID_PDF_GRID_CORNER
+                    +"Grid corner"
+                }
+                select("form-select") {
+                    id = ID_PDF_GRID_CORNER
+                    style = "max-width: 300px;"
+                    GRID_CORNERS.forEach { (corner, label) ->
+                        option {
+                            value = corner.name
+                            +label
+                        }
+                    }
+                    onChangeFunction = {
+                        setPdfGridCorner(GridCorner.valueOf(pdfGridCorner.value))
+                    }
+                }
+                small("form-text text-muted") {
+                    +"Corner of the page to place the grid on."
+                }
+            }
             button(classes = "btn btn-secondary btn-sm") {
                 +"Reset to defaults"
                 onClickFunction = {
@@ -202,6 +234,7 @@ object Settings {
         pdfInkSaverPercentageInput.value = getPdfInkSaverPercentage().toString()
         onInkSaverPercentageInput()
         pdfFont.value = getPdfFont()
+        pdfGridCorner.value = getPdfGridCorner().name
     }
 
     private fun onInkSaverPercentageInput() {
@@ -277,6 +310,23 @@ object Settings {
     private fun setPdfFont(font: String) {
         val items = js("{}")
         items[ID_PDF_FONT] = font
+        browser.storage.sync.set(items)
+    }
+
+    /** Corner of the page to place the grid on for .pdf files. Default is BOTTOM_RIGHT. */
+    suspend fun getPdfGridCorner(): GridCorner {
+        val items = browser.storage.sync.get(ID_PDF_GRID_CORNER).await()
+        val cornerString = items[ID_PDF_GRID_CORNER] as? String ?: return GridCorner.BOTTOM_RIGHT
+        return try {
+            GridCorner.valueOf(cornerString)
+        } catch (e: IllegalArgumentException) {
+            GridCorner.BOTTOM_RIGHT
+        }
+    }
+
+    private fun setPdfGridCorner(gridCorner: GridCorner) {
+        val items = js("{}")
+        items[ID_PDF_GRID_CORNER] = gridCorner.name
         browser.storage.sync.set(items)
     }
 

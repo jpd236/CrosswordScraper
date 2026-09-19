@@ -33,7 +33,8 @@ enum class FileFormat(
             }
             it.asPdf(
                 fontFamily = fontFamily,
-                blackSquareLightnessAdjustment = Settings.getPdfInkSaverPercentage() / 100.0
+                blackSquareLightnessAdjustment = Settings.getPdfInkSaverPercentage() / 100.0,
+                gridCorner = Settings.getPdfGridCorner(),
             )
         }),
 }

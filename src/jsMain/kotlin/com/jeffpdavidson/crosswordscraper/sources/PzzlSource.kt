@@ -31,7 +31,7 @@ object PzzlSource : FixedHostSource() {
         if (url.host == "nytsyn.pzzl.com" && url.pathname.matches("/cwd[^/]*/".toRegex())) {
             return NYT_SOURCE
         }
-        if (url.hostIsDomainOrSubdomainOf("brainsonly.com") && url.pathname == "/global/newsday/cwd/") {
+        if (url.hostIsDomainOrSubdomainOf("brainsonly.com") && url.pathname == "/global/netword/cwd/") {
             return NEWSDAY_SOURCE
         }
         return null
@@ -39,7 +39,12 @@ object PzzlSource : FixedHostSource() {
 
     override suspend fun scrapePuzzlesWithPermissionGranted(url: URL, tabId: Int, frameId: Int): ScrapeResult {
         val baseUrl = getSourceInfo(url)?.baseUrl ?: throw UnsupportedOperationException("Unknown URL: $url")
-        val data = Http.fetchAsString("$baseUrl?date=${url.hash.substringAfterLast("/")}")
+        val datedUrl = "$baseUrl?date=${url.hash.substringAfterLast("/")}"
+        val permissions = getPermissionsForUrls(listOf(URL(datedUrl)))
+        if (!hasPermissions(permissions)) {
+            return ScrapeResult.NeedPermissions(permissions)
+        }
+        val data = Http.fetchAsString(datedUrl)
         return ScrapeResult.Success(listOf(Pzzl(data)))
     }
 }

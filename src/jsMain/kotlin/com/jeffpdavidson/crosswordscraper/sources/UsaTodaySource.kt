@@ -9,7 +9,7 @@ import org.w3c.dom.url.URL
 object UsaTodaySource : FixedHostSource() {
 
     private val URL_PATH_PUZZLE_ID_PATTERN =
-        "/crossword/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})".toRegex()
+        "/(?:crossword|midgrid)/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})".toRegex()
 
     override val sourceName = "USA Today"
     override fun neededHostPermissions(url: URL) = listOf("https://*.usatoday.com/*")

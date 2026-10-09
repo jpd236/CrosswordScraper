@@ -57,6 +57,14 @@ object PuzzmoSource : FixedHostSource() {
               });
             }"""
         )
+        return scrapePuzzmoData(tabId, frameId, jsonFetchFn)
+    }
+
+    internal suspend fun scrapePuzzmoData(
+        tabId: Int,
+        frameId: Int,
+        jsonFetchFn: dynamic,
+    ): ScrapeResult {
         return scrapePuzzmoData<GraphQLResponse>(tabId, frameId, jsonFetchFn) {
             it.data?.startOrFindGameplay?.gamePlayed
         }
